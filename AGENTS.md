@@ -5,9 +5,10 @@
 ## 范围
 
 - ✅ Java：HTTP API、CLI、dataset、result 读取侧、optimizer、skill_analysis、OTLP 接收 `/v1/traces`、脱敏（读取侧）、调度扫描 + BJS 提交、domain/storage Java 版、fail_stale_runs。
-- 🐍 不动：BJS 回调拉起的 Python 执行链（引擎/evaluator/targets/judge/abc_llm_sdk）；前端 `frontend/`（Vue 3，仅本地联调，API 契约不变）。
+- 🐍 不动：BJS 回调拉起的 Python 执行链（引擎/evaluator/targets/judge/abc_llm_sdk）；主力前端 = Python 仓库 `frontend/`（agent-evaluation-ux），**不迁移**、仅改其 `.env.local` 指向 Java（`API_PROXY_TARGET` 指向 Java 服务 + `VITE_API_BASE_URL=/race-api/api`）；Python 仓库 `web/` 为测试页面，**忽略**；本工程 `frontend/` 为框架验证样板，后续废除。
 - 🗑 退役件不迁移：Celery worker/beat、内置 Redis、redis_cluster_transport。
 - 🔗 与 Python 共库的跨语言契约：canonical JSON + content_sha256、原子 claim、凭据密文 AES-256-GCM `v1.{base64}`、run 状态机、trace 归一化——必须与 Python 语义一致并编写 golden 对拍测试。
+- 已决策（2026-10-01）：LLM 通道暂不支持 `transport=api`，skill_analysis/optimizer 的 LLM 调用点返回 mock + TODO，后期替换；调度扫描归 Java `@Scheduled`，BJS 只负责执行；前端直连 Java（无代理层），context-path 保留 `/race-api`；user-context（header `user_team_id`/`user_id`/`user_name`）读取延后至收尾阶段统一处理。
 - 范围基线为《重构分析V2.md》三色分类，最终逐模块与用户确认后定稿。
 
 ## 工作流程
@@ -28,7 +29,7 @@
 - **Schema 冻结**：严禁新增表、字段或任何数据库结构变更，一律按现有数据库表结构重写；后续新增功能需改库时，必须先经用户同意。
 - 只用 Java 8 语法（无 `var`/`record`/`sealed`）；不可变值对象用 Lombok `@Value`/`@Builder`。
 - 分层：Controller（校验 → Service → `ResponseBase<T>`，`code="0"` 成功）→ Service → Logic（跨表聚合、事务边界）→ DAO（单表 CRUD，复杂 SQL 走 XML）。
-- 模块结构：`com.abchina.llmalf.agentgate.<module>/{controller, service(含 impl/vo), logic, dao(含 entity), enums, util}`；参照现有 `user`、`common/`、`config/` 样板。
+- 包结构：`com.abchina.llmalf.agentgate` 下**按层平铺**——`controller/`、`service/`（含 `impl/`、`vo/`）、`logic/`、`dao/`（含 `entity/`，XML 与 DAO 同包）、`enums/`，不按业务建子包；`domain/` 为顶层纯 Java 契约层（canonical JSON、content_sha256、值对象与校验，不依赖 Spring/MyBatis）；`common/`、`config/` 为跨层通用件；`user` 为框架验证样板（后续废除，勿参照其建立业务子包）。
 - 业务异常抛 `AgentException`，由 `GlobalExceptionHandler` 统一捕获。
 - 实体继承 `Serializable`，`@TableName`/`@TableId`/`@TableField`/`@TableLogic` 齐全；TDSQL 保留字反引号包裹；MyBatis XML 与 DAO 同包。
 - 日志用 `@Slf4j`，关键节点结构化打点；禁止记录任何密钥/凭据；不引入新日志框架。

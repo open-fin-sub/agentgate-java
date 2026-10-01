@@ -1,6 +1,6 @@
-package com.abchina.llmalf.agentgate.user.dao;
+package com.abchina.llmalf.agentgate.dao;
 
-import com.abchina.llmalf.agentgate.user.dao.entity.UserEntity;
+import com.abchina.llmalf.agentgate.dao.entity.UserEntity;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import org.apache.ibatis.annotations.Mapper;

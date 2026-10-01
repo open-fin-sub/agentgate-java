@@ -1,4 +1,4 @@
-package com.abchina.llmalf.agentgate.user.service.vo;
+package com.abchina.llmalf.agentgate.service.vo;
 
 import lombok.Data;
 

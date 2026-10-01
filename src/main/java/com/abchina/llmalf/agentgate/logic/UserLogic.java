@@ -1,14 +1,14 @@
-package com.abchina.llmalf.agentgate.user.logic;
+package com.abchina.llmalf.agentgate.logic;
 
 import com.abchina.llmalf.agentgate.common.AgentException;
-import com.abchina.llmalf.agentgate.user.dao.entity.UserEntity;
-import com.abchina.llmalf.agentgate.user.service.vo.UserQueryVO;
-import com.abchina.llmalf.agentgate.user.service.vo.UserSaveVO;
+import com.abchina.llmalf.agentgate.dao.entity.UserEntity;
+import com.abchina.llmalf.agentgate.service.vo.UserQueryVO;
+import com.abchina.llmalf.agentgate.service.vo.UserSaveVO;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.abchina.llmalf.agentgate.user.dao.UserDAO;
-import com.abchina.llmalf.agentgate.user.enums.UserConstants;
+import com.abchina.llmalf.agentgate.dao.UserDAO;
+import com.abchina.llmalf.agentgate.enums.UserConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

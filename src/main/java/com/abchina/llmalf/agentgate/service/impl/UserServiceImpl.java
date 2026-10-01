@@ -1,13 +1,13 @@
-package com.abchina.llmalf.agentgate.user.service.impl;
+package com.abchina.llmalf.agentgate.service.impl;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.abchina.llmalf.agentgate.user.dao.UserDAO;
-import com.abchina.llmalf.agentgate.user.dao.entity.UserEntity;
-import com.abchina.llmalf.agentgate.user.logic.UserLogic;
-import com.abchina.llmalf.agentgate.user.service.IUserService;
-import com.abchina.llmalf.agentgate.user.service.vo.UserQueryVO;
-import com.abchina.llmalf.agentgate.user.service.vo.UserSaveVO;
-import com.abchina.llmalf.agentgate.user.service.vo.UserVO;
+import com.abchina.llmalf.agentgate.dao.UserDAO;
+import com.abchina.llmalf.agentgate.dao.entity.UserEntity;
+import com.abchina.llmalf.agentgate.logic.UserLogic;
+import com.abchina.llmalf.agentgate.service.IUserService;
+import com.abchina.llmalf.agentgate.service.vo.UserQueryVO;
+import com.abchina.llmalf.agentgate.service.vo.UserSaveVO;
+import com.abchina.llmalf.agentgate.service.vo.UserVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

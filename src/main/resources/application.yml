@@ -21,7 +21,7 @@ spring:
 mybatis-plus:
   # 规范:复杂 SQL 走 XML,XML 与 DAO 同包
   mapper-locations: classpath*:com/abchina/llmalf/**/dao/**/*DAO.xml
-  type-aliases-package: com.abchina.llmalf.user.dao.entity
+  type-aliases-package: com.abchina.llmalf.agentgate.dao.entity
   configuration:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

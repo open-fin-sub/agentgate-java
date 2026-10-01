@@ -1,4 +1,4 @@
-package com.abchina.llmalf.agentgate.user.enums;
+package com.abchina.llmalf.agentgate.enums;
 
 /**
  * 用户模块常量.

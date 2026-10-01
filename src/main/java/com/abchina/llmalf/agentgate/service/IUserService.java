@@ -1,8 +1,8 @@
-package com.abchina.llmalf.agentgate.user.service;
+package com.abchina.llmalf.agentgate.service;
 
-import com.abchina.llmalf.agentgate.user.service.vo.UserQueryVO;
-import com.abchina.llmalf.agentgate.user.service.vo.UserSaveVO;
-import com.abchina.llmalf.agentgate.user.service.vo.UserVO;
+import com.abchina.llmalf.agentgate.service.vo.UserQueryVO;
+import com.abchina.llmalf.agentgate.service.vo.UserSaveVO;
+import com.abchina.llmalf.agentgate.service.vo.UserVO;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 
 /**

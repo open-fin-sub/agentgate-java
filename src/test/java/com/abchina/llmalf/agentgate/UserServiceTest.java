@@ -1,11 +1,11 @@
-package com.abchina.llmalf.agentgate.user;
+package com.abchina.llmalf.agentgate;
 
 import com.abchina.llmalf.agentgate.common.AgentException;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.abchina.llmalf.agentgate.user.service.IUserService;
-import com.abchina.llmalf.agentgate.user.service.vo.UserQueryVO;
-import com.abchina.llmalf.agentgate.user.service.vo.UserSaveVO;
-import com.abchina.llmalf.agentgate.user.service.vo.UserVO;
+import com.abchina.llmalf.agentgate.service.IUserService;
+import com.abchina.llmalf.agentgate.service.vo.UserQueryVO;
+import com.abchina.llmalf.agentgate.service.vo.UserSaveVO;
+import com.abchina.llmalf.agentgate.service.vo.UserVO;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

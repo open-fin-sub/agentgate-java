@@ -1,4 +1,4 @@
-package com.abchina.llmalf.agentgate.user.dao.entity;
+package com.abchina.llmalf.agentgate.dao.entity;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;

@@ -1,11 +1,11 @@
-package com.abchina.llmalf.agentgate.user.controller;
+package com.abchina.llmalf.agentgate.controller;
 
 import com.abchina.llmalf.agentgate.common.ResponseBase;
-import com.abchina.llmalf.agentgate.user.service.vo.UserQueryVO;
-import com.abchina.llmalf.agentgate.user.service.vo.UserSaveVO;
-import com.abchina.llmalf.agentgate.user.service.vo.UserVO;
+import com.abchina.llmalf.agentgate.service.vo.UserQueryVO;
+import com.abchina.llmalf.agentgate.service.vo.UserSaveVO;
+import com.abchina.llmalf.agentgate.service.vo.UserVO;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.abchina.llmalf.agentgate.user.service.IUserService;
+import com.abchina.llmalf.agentgate.service.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
