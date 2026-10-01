@@ -1,0 +1,14 @@
+spring:
+  config:
+    # 测试环境复用主配置,仅覆盖日志级别以降低噪音
+    activate:
+      on-profile: test
+
+logging:
+  level:
+    com.abchina.llmalf: warn
+    org.springframework.web: warn
+    org.springframework.jdbc: warn
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl

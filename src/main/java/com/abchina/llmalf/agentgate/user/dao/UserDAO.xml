@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 规范:复杂 SQL 走 XML,XML 与 DAO 同包 -->
+<mapper namespace="com.abchina.llmalf.agentgate.user.dao.UserDAO">
+
+    <resultMap id="userResultMap" type="com.abchina.llmalf.agentgate.user.dao.entity.UserEntity">
+        <id column="id" property="id"/>
+        <result column="username" property="username"/>
+        <result column="nickname" property="nickname"/>
+        <result column="email" property="email"/>
+        <result column="phone" property="phone"/>
+        <result column="status" property="status"/>
+        <result column="is_deleted" property="isDeleted"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <!-- 复杂分页查询:用户名模糊 + 状态过滤,自动排除逻辑删除数据 -->
+    <select id="selectUserPage" resultMap="userResultMap">
+        SELECT
+            `id`,
+            `username`,
+            `nickname`,
+            `email`,
+            `phone`,
+            `status`,
+            `is_deleted`,
+            `create_time`,
+            `update_time`
+        FROM `sys_user`
+        WHERE `is_deleted` = 0
+        <if test="username != null and username != ''">
+            AND `username` LIKE CONCAT('%', #{username}, '%')
+        </if>
+        <if test="status != null">
+            AND `status` = #{status}
+        </if>
+        ORDER BY `id` DESC
+    </select>
+
+</mapper>

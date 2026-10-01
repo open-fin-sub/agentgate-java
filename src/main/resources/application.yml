@@ -1,0 +1,53 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /race-api
+
+spring:
+  application:
+    name: agentgate
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/eric?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true
+    # 凭据通过环境变量注入,禁止明文提交;变量名与 Python 工程 .env 保持一致
+    username: ${AGENTGATE_TDSQL_USER:eric}
+    password: ${AGENTGATE_TDSQL_PASSWORD}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+
+# MyBatis-Plus 3.5.5 配置
+mybatis-plus:
+  # 规范:复杂 SQL 走 XML,XML 与 DAO 同包
+  mapper-locations: classpath*:com/abchina/llmalf/**/dao/**/*DAO.xml
+  type-aliases-package: com.abchina.llmalf.user.dao.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    banner: false
+    db-config:
+      id-type: auto
+      logic-delete-field: isDeleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+logging:
+  level:
+    com.abchina.llmalf: debug
+    org.springframework.web: info
+
+# 代理配置:转发 /race-api/agentgate/** 到 Python 服务
+agentgate:
+  proxy:
+    # Python 服务目标地址
+    target-base-url: http://127.0.0.1:8000
+    # 连接超时(ms)
+    connect-timeout: 5000
+    # 读取超时(ms)
+    read-timeout: 30000
+    # OkHttp 连接池最大空闲连接数
+    max-idle-connections: 20
+    # OkHttp 连接池保活时长(分钟)
+    keep-alive-minutes: 5
