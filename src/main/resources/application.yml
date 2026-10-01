@@ -38,8 +38,16 @@ logging:
     com.abchina.llmalf: debug
     org.springframework.web: info
 
-# 代理配置:转发 /race-api/agentgate/** 到 Python 服务
+# 应用自定义配置
 agentgate:
+  # CORS 允许源(逗号分隔)
+  cors:
+    allowed-origins: http://localhost:5173,http://127.0.0.1:5173
+  # 分页
+  page:
+    # 单页最大条数
+    max-limit: 500
+  # 代理配置:转发 /race-api/agentgate/** 到 Python 服务(样板,后续废除)
   proxy:
     # Python 服务目标地址
     target-base-url: http://127.0.0.1:8000

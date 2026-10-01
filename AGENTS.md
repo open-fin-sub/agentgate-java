@@ -33,6 +33,7 @@
 - 业务异常抛 `AgentException`，由 `GlobalExceptionHandler` 统一捕获。
 - 实体继承 `Serializable`，`@TableName`/`@TableId`/`@TableField`/`@TableLogic` 齐全；TDSQL 保留字反引号包裹；MyBatis XML 与 DAO 同包。
 - 日志用 `@Slf4j`，关键节点结构化打点；禁止记录任何密钥/凭据；不引入新日志框架。
+- 环境相关或可调的常量一律做成 `application.yml` 配置项（`@Value("${key:默认值}")`，默认值可写死在代码，yml 中显式列出）；仅跨语言协议契约常量（`/v1/traces`、脱敏正则、信封码）可固化在代码。
 - 新增依赖、抽象层、兼容别名须先经用户确认。
 - 编码规范全文：`/Users/eric/hw/xql/document/abc-北京农行/工程架构与编码规范（已脱敏）.md`。
 

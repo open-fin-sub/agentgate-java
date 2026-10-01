@@ -7,7 +7,8 @@ import java.io.Serializable;
 /**
  * 统一返回格式.
  *
- * <p>规范:统一使用 ResponseBase(code/message/data),code="0" 为成功.</p>
+ * <p>规范:统一使用 ResponseBase(code/message/data),code="0" 为成功,"1" 为失败,
+ * 语义对齐 Python 版 ResponseEnvelopeMiddleware.</p>
  *
  * @param <T> 数据载荷类型
  */
@@ -19,11 +20,8 @@ public class ResponseBase<T> implements Serializable {
     /** 成功状态码 */
     public static final String CODE_SUCCESS = "0";
 
-    /** 默认失败状态码 */
-    public static final String CODE_FAIL = "-1";
-
-    /** 系统异常状态码 */
-    public static final String CODE_SYSTEM_ERROR = "500";
+    /** 失败状态码(对齐 Python 信封语义) */
+    public static final String CODE_ERROR = "1";
 
     private String code;
     private String message;
@@ -49,6 +47,12 @@ public class ResponseBase<T> implements Serializable {
     }
 
     public static <T> ResponseBase<T> fail(String message) {
-        return fail(CODE_FAIL, message);
+        return fail(CODE_ERROR, message);
+    }
+
+    public static <T> ResponseBase<T> fail(String message, T data) {
+        ResponseBase<T> resp = fail(CODE_ERROR, message);
+        resp.setData(data);
+        return resp;
     }
 }
