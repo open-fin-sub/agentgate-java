@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 对齐 Python server/logging_config.py: 控制台 + agentgate.log(全量) + agentgate-error.log(仅 ERROR),
+     10MB 轮转保留 3 份,UTF-8,格式 [时间] [线程] [级别] 记录器 - 消息 -->
+<configuration>
+    <!-- 日志目录: 占位引用与 Python .env 同名环境变量(默认对齐 Python 工程同级 runtime/logs/agentgate 约定) -->
+    <springProperty scope="context" name="logPath" source="agentgate.logging.path"
+            defaultValue="../runtime/logs/agentgate"/>
+    <!-- 级别名对齐 Python logging: WARN 显示为 WARNING -->
+    <conversionRule conversionWord="pylevel"
+            converterClass="com.abchina.llmalf.agentgate.common.PythonLevelConverter"/>
+
+    <property name="PATTERN" value="[%d{yyyy-MM-dd HH:mm:ss}] [%thread] [%pylevel] %logger - %msg%n"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${logPath}/agentgate.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <fileNamePattern>${logPath}/agentgate.log.%i</fileNamePattern>
+            <minIndex>1</minIndex>
+            <maxIndex>3</maxIndex>
+        </rollingPolicy>
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <maxFileSize>10MB</maxFileSize>
+        </triggeringPolicy>
+        <encoder>
+            <pattern>${PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${logPath}/agentgate-error.log</file>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <fileNamePattern>${logPath}/agentgate-error.log.%i</fileNamePattern>
+            <minIndex>1</minIndex>
+            <maxIndex>3</maxIndex>
+        </rollingPolicy>
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <maxFileSize>10MB</maxFileSize>
+        </triggeringPolicy>
+        <encoder>
+            <pattern>${PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+        <appender-ref ref="ERROR_FILE"/>
+    </root>
+</configuration>

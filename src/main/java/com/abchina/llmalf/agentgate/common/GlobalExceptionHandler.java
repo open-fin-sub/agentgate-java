@@ -78,6 +78,14 @@ public class GlobalExceptionHandler {
         return unprocessable("请求体格式错误");
     }
 
+    /** 未映射路径(对齐 FastAPI 默认 404 {"detail":"Not Found"}) */
+    @ExceptionHandler(org.springframework.web.servlet.NoHandlerFoundException.class)
+    public ResponseEntity<ResponseBase<Object>> handleNoHandler(
+            org.springframework.web.servlet.NoHandlerFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ResponseBase.<Object>fail("Not Found"));
+    }
+
     /** 兜底:系统异常(消息脱敏,对齐 Python _safe_message) */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ResponseBase<Object>> handleException(Exception e) {

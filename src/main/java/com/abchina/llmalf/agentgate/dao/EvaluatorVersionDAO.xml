@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.abchina.llmalf.agentgate.dao.EvaluatorVersionDAO">
+
+    <insert id="insert">
+        INSERT INTO agentgate_evaluator_versions (evaluator_key, version, evaluator_id, content_sha256, user_team_key, user_team_id, user_id, user_name, payload) VALUES (#{entity.evaluatorKey}, #{entity.version}, #{entity.evaluatorId}, #{entity.contentSha256}, #{entity.userTeamKey}, #{entity.userTeamId}, #{entity.userId}, #{entity.userName}, #{entity.payload})
+    </insert>
+    <select id="selectByEvaluatorKey" resultType="com.abchina.llmalf.agentgate.dao.entity.EvaluatorVersionEntity">
+        SELECT * FROM agentgate_evaluator_versions WHERE evaluator_key = #{evaluatorKey}
+    </select>
+    <select id="selectByEvaluatorKeyAndVersion" resultType="com.abchina.llmalf.agentgate.dao.entity.EvaluatorVersionEntity">
+        SELECT * FROM agentgate_evaluator_versions WHERE evaluator_key = #{evaluatorKey} AND version = #{version}
+    </select>
+</mapper>

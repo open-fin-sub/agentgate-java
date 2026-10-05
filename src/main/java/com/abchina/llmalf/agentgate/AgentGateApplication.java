@@ -9,6 +9,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  *
  * <p>扫描 DAO 接口包,遵循后端分层规范(Controller -> Service -> Logic -> DAO).</p>
  */
+@org.springframework.scheduling.annotation.EnableScheduling
 @SpringBootApplication
 @MapperScan("com.abchina.llmalf.**.dao")
 public class AgentGateApplication {

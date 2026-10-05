@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.abchina.llmalf.agentgate.dao.EvaluationTaskRunDAO">
+
+    <insert id="insert">
+        INSERT INTO agentgate_evaluation_task_runs (run_key, run_id, task_key, task_id) VALUES (#{entity.runKey}, #{entity.runId}, #{entity.taskKey}, #{entity.taskId})
+    </insert>
+    <select id="selectByRunKey" resultType="com.abchina.llmalf.agentgate.dao.entity.EvaluationTaskRunEntity">
+        SELECT * FROM agentgate_evaluation_task_runs WHERE run_key = #{runKey}
+    </select>
+    <select id="selectByTaskKey" resultType="com.abchina.llmalf.agentgate.dao.entity.EvaluationTaskRunEntity">
+        SELECT * FROM agentgate_evaluation_task_runs WHERE task_key = #{taskKey}
+    </select>
+    <delete id="deleteByTaskKey">
+        DELETE FROM agentgate_evaluation_task_runs WHERE task_key = #{taskKey}
+    </delete>
+    <delete id="deleteByRunKey">
+        DELETE FROM agentgate_evaluation_task_runs WHERE run_key = #{runKey}
+    </delete>
+</mapper>

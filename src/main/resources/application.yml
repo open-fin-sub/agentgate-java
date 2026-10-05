@@ -6,16 +6,29 @@ server:
 spring:
   application:
     name: agentgate
+  mvc:
+    # 未映射路径抛 NoHandlerFoundException(对齐 FastAPI 404 {"detail":"Not Found"})
+    throw-exception-if-no-handler-found: true
+  resources:
+    add-mappings: false
+  jackson:
+    # API 契约对齐 Python(pydantic 默认 snake_case)
+    property-naming-strategy: SNAKE_CASE
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://127.0.0.1:3306/eric?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true
+    # 与 Python .env 指向同一实例(共库);时区统一 UTC(naive UTC 存储,对齐 Python init_command)
+    url: jdbc:mysql://127.0.0.1:3306/eric?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=UTC&connectionTimeZone=UTC&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true
     # 凭据通过环境变量注入,禁止明文提交;变量名与 Python 工程 .env 保持一致
     username: ${AGENTGATE_TDSQL_USER:eric}
     password: ${AGENTGATE_TDSQL_PASSWORD}
     hikari:
       maximum-pool-size: 10
       minimum-idle: 2
-      connection-timeout: 30000
+      connection-timeout: 10000
+      # 对齐 Python 引擎:READ COMMITTED + 会话时区 UTC + 连接回收
+      transaction-isolation: TRANSACTION_READ_COMMITTED
+      connection-init-sql: SET time_zone = '+00:00'
+      max-lifetime: 1800000
 
 # MyBatis-Plus 3.5.5 配置
 mybatis-plus:
@@ -40,6 +53,37 @@ logging:
 
 # 应用自定义配置
 agentgate:
+  # 日志目录(占位引用与 Python .env 同名环境变量;默认对齐 Python 工程同级 runtime/logs/agentgate 约定)
+  logging:
+    path: ${AGENTGATE_LOG_PATH:../runtime/logs/agentgate}
+  # BJS 任务派发
+  bjs:
+    # 提交接口完整 URL(占位引用与 Python .env 同名环境变量;空=未配置,派发器禁用)
+    submit-url: ${AGENTGATE_BJS_SUBMIT_URL:}
+    # BJS 作业模板 ID(与 Python .env 同名环境变量)
+    job-id: ${AGENTGATE_BJS_JOB_ID:}
+    # 提交超时(秒)
+    timeout-seconds: 10
+  # 调度扫描
+  scheduling:
+    # 扫描周期(秒)
+    interval-seconds: 10
+    # RUNNING 超时判定宽限(秒),超时未完成判 FAILED(fail_stale_runs)
+    stale-grace-seconds: 30
+    # 单轮扫描派发的最大 Run 数(due/waiting 各自上限)
+    scan-batch-size: 100
+    # 每 API Key 最大并发 Run 数
+    max-concurrent-per-api-key: 10
+    # 派发失败最大尝试次数
+    max-dispatch-attempts: 10
+  # 团队概览
+  overview:
+    # overview 聚合最大扫描 Run 数
+    max-runs: 50
+  # OTLP 接收
+  telemetry:
+    # /v1/traces 请求体大小上限(字节,对齐 Python MAX_REQUEST_BYTES)
+    max-request-bytes: 4194304
   # CORS 允许源(逗号分隔)
   cors:
     allowed-origins: http://localhost:5173,http://127.0.0.1:5173

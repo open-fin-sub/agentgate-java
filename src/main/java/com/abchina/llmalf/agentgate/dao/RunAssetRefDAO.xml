@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.abchina.llmalf.agentgate.dao.RunAssetRefDAO">
+
+    <select id="selectByAssetLookupKey" resultType="com.abchina.llmalf.agentgate.dao.entity.RunAssetRefEntity">
+        SELECT * FROM agentgate_run_asset_refs WHERE asset_lookup_key = #{assetLookupKey}
+    </select>
+    <select id="selectByRunKey" resultType="com.abchina.llmalf.agentgate.dao.entity.RunAssetRefEntity">
+        SELECT * FROM agentgate_run_asset_refs WHERE run_key = #{runKey}
+    </select>
+
+    <select id="selectByKey" resultType="com.abchina.llmalf.agentgate.dao.entity.RunAssetRefEntity">
+        SELECT * FROM agentgate_run_asset_refs WHERE id_key = #{idKey}
+    </select>
+    <delete id="deleteByKey">
+        DELETE FROM agentgate_run_asset_refs WHERE id_key = #{idKey}
+    </delete>
+</mapper>

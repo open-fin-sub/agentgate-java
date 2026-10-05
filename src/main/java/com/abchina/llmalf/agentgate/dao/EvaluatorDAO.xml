@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.abchina.llmalf.agentgate.dao.EvaluatorDAO">
+
+    <select id="selectByTeamKey" resultType="com.abchina.llmalf.agentgate.dao.entity.EvaluatorEntity">
+        SELECT * FROM agentgate_evaluators WHERE user_team_key = #{userTeamKey}
+    </select>
+    <select id="selectByIdForUpdate" resultType="com.abchina.llmalf.agentgate.dao.entity.EvaluatorEntity">
+        SELECT * FROM agentgate_evaluators WHERE id_key = #{idKey} FOR UPDATE
+    </select>
+
+    <select id="selectByKey" resultType="com.abchina.llmalf.agentgate.dao.entity.EvaluatorEntity">
+        SELECT * FROM agentgate_evaluators WHERE id_key = #{idKey}
+    </select>
+    <delete id="deleteByKey">
+        DELETE FROM agentgate_evaluators WHERE id_key = #{idKey}
+    </delete>
+</mapper>

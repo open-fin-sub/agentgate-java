@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.abchina.llmalf.agentgate.dao.SkillAnalysisReportDAO">
+
+    <select id="selectByKey" resultType="com.abchina.llmalf.agentgate.dao.entity.SkillAnalysisReportEntity">
+        SELECT * FROM agentgate_skill_analysis_reports WHERE id_key = #{idKey}
+    </select>
+</mapper>

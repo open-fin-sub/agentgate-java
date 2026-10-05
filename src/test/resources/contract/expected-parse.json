@@ -1,0 +1,60 @@
+[
+  {
+    "id": "c1",
+    "name": "查余额",
+    "category": "positive",
+    "difficulty": "easy",
+    "tags": [
+      "核心",
+      "smoke"
+    ],
+    "notes": "主流程",
+    "initial_state": {
+      "account": {
+        "balance": 100
+      }
+    },
+    "turns": [
+      {
+        "input": {
+          "q": "余额多少"
+        },
+        "expectations": [
+          {
+            "id": "e1",
+            "kind": "policy",
+            "policy_id": "p1"
+          }
+        ],
+        "notes": "",
+        "id": "t1"
+      },
+      {
+        "input": {
+          "q": "转账"
+        },
+        "expectations": [],
+        "notes": "第二轮",
+        "id": "t2"
+      }
+    ]
+  },
+  {
+    "id": "c2",
+    "name": "边界-空态",
+    "category": "boundary",
+    "difficulty": "hard",
+    "tags": [],
+    "notes": "",
+    "initial_state": {},
+    "turns": [
+      {
+        "input": {
+          "q": "冷启动"
+        },
+        "expectations": [],
+        "notes": ""
+      }
+    ]
+  }
+]

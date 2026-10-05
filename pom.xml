@@ -68,7 +68,7 @@
                 <artifactId>jsqlparser</artifactId>
                 <version>${jsqlparser.version}</version>
             </dependency>
-        </dependencies>
+    </dependencies>
     </dependencyManagement>
 
     <dependencies>
@@ -108,11 +108,6 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
         </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.11.0</version>
-        </dependency>
 
         <!-- OkHttp HTTP 客户端(规范文档 3.2 节直接依赖,代理转发底层引擎) -->
         <dependency>
@@ -126,6 +121,18 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
+        </dependency>
+        <!-- XLSX 数据集导入导出(对齐 Python openpyxl 交换格式) -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.2.5</version>
+        </dependency>
+        <!-- POI 5.2.5 要求 commons-io 2.15.0(Boot 2.3.8 BOM 默认 2.6 过旧,须显式声明) -->
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.15.0</version>
         </dependency>
     </dependencies>
 
@@ -145,6 +152,26 @@
         </resources>
 
         <plugins>
+            <!-- 覆盖率测量(仅测试期,不进运行时依赖) -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.8</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

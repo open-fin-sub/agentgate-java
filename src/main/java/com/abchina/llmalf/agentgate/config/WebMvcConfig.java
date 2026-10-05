@@ -1,15 +1,18 @@
 package com.abchina.llmalf.agentgate.config;
 
+import com.abchina.llmalf.agentgate.common.UserContextInterceptor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
  * Web MVC 配置.
  *
  * <p>CORS 语义对齐 Python app.py:默认允许本地 5173 开发源,全部方法与请求头;
- * 允许源可通过 agentgate.cors.allowed-origins 配置(逗号分隔).</p>
+ * 允许源可通过 agentgate.cors.allowed-origins 配置(逗号分隔).
+ * 用户上下文拦截器对齐 UserContextMiddleware(header 透传)。</p>
  */
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
@@ -24,5 +27,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .allowedOrigins(allowedOrigins)
                 .allowedMethods("*")
                 .allowedHeaders("*");
+    }
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(new UserContextInterceptor()).addPathPatterns("/**");
     }
 }
