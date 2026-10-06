@@ -78,6 +78,14 @@ public class GlobalExceptionHandler {
         return unprocessable("请求体格式错误");
     }
 
+    /** 方法不支持(对齐 FastAPI 405 "Method Not Allowed") */
+    @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ResponseBase<Object>> handleMethodNotSupported(
+            org.springframework.web.HttpRequestMethodNotSupportedException e) {
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+                .body(ResponseBase.<Object>fail("Method Not Allowed"));
+    }
+
     /** 未映射路径(对齐 FastAPI 默认 404 {"detail":"Not Found"}) */
     @ExceptionHandler(org.springframework.web.servlet.NoHandlerFoundException.class)
     public ResponseEntity<ResponseBase<Object>> handleNoHandler(

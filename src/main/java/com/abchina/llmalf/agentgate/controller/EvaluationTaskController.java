@@ -87,11 +87,22 @@ public class EvaluationTaskController {
                 errors.extraForbidden("body", key, body.get(key));
             }
         }
-        Object rawKind = body.get("kind");
-        if (rawKind == null) {
+        if (!body.containsKey("kind")) {
             errors.missing("body", "kind", body);
-        } else if (!(rawKind instanceof String)) {
-            errors.stringType("body", "kind", rawKind);
+        } else {
+            Object rawKind = body.get("kind");
+            if (rawKind == null || !(rawKind instanceof String)) {
+                errors.stringType("body", "kind", rawKind);
+            } else {
+                try {
+                    EvaluationTaskKind.fromWireValue(String.valueOf(rawKind));
+                } catch (IllegalArgumentException e) {
+                    errors.custom("enum", "body", "kind",
+                            "Input should be 'single', 'ab' or 'stability'",
+                            rawKind, java.util.Collections.singletonMap("expected",
+                                    "'single', 'ab' or 'stability'"));
+                }
+            }
         }
         List<String> runIds = stringListField(errors, body, "run_ids");
         List<String> staticReportIds = stringListField(errors, body,
@@ -103,14 +114,8 @@ public class EvaluationTaskController {
             staticReportIds = new ArrayList<>();
         }
         errors.throwIfAny();
-        String kind = String.valueOf(rawKind);
-        EvaluationTaskKind taskKind;
-        try {
-            taskKind = EvaluationTaskKind.fromWireValue(kind);
-        } catch (IllegalArgumentException e) {
-            throw new AgentException(422,
-                    "Input should be 'single', 'ab' or 'stability'");
-        }
+        EvaluationTaskKind taskKind = EvaluationTaskKind.fromWireValue(
+                String.valueOf(body.get("kind")));
         // 域基数校验优先于 run 存在性(对齐 Python 模型校验先行的 409 语义)
         EvaluationTask task;
         try {
@@ -144,7 +149,25 @@ public class EvaluationTaskController {
         if (taskKind == EvaluationTaskKind.AB && runs.size() == 2) {
             validateAbPair(runs.get(0), runs.get(1));
         }
-        return ResponseBase.success(taskLogic.saveTask(task).toPayload());
+        EvaluationTask saved;
+        try {
+            saved = taskLogic.saveTask(task);
+        } catch (IllegalArgumentException e) {
+            String m = e.getMessage() == null ? "" : e.getMessage();
+            if (m.contains("immutable")) {
+                throw new AgentException(409, m);
+            }
+            if (m.contains("unknown static report")) {
+                throw new AgentException(404,
+                        "task references an unknown static report");
+            }
+            if (m.contains("unknown EvaluationRun")) {
+                throw new AgentException(404, "task references an unknown run");
+            }
+            // 其余域校验冲突统一 409(对齐 Python ValueError 分支)
+            throw new AgentException(409, m);
+        }
+        return ResponseBase.success(saved.toPayload());
     }
 
     /**

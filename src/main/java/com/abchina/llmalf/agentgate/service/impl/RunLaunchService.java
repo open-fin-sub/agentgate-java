@@ -417,6 +417,10 @@ public class RunLaunchService {
     }
 
     private DatasetVersion requirePublishedVersion(String datasetId, int version) {
+        // 两段式对齐 Python:get_dataset 身份先行,再查版本
+        if (datasetLogic.getDataset(datasetId, teamId()) == null) {
+            throw new AgentException(422, "unknown Dataset: " + datasetId);
+        }
         DatasetVersion item = datasetLogic.getPublishedDatasetVersion(datasetId, version,
                 teamId());
         if (item == null) {
@@ -427,6 +431,9 @@ public class RunLaunchService {
     }
 
     private DatasetVersion latestPublishedVersion(String datasetId) {
+        if (datasetLogic.getDataset(datasetId, teamId()) == null) {
+            throw new AgentException(422, "unknown Dataset: " + datasetId);
+        }
         DatasetVersion item = datasetLogic.getLatestPublishedDatasetVersion(datasetId,
                 teamId());
         if (item == null) {

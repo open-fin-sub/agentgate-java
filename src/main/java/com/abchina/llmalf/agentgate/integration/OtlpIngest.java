@@ -62,26 +62,30 @@ public final class OtlpIngest {
      */
     public static List<Trace> normalize(Map<String, Object> payload) {
         Map<String, List<TraceSpan>> grouped = new LinkedHashMap<>();
-        Object rawResources = payload.get("resourceSpans");
-        List<?> resources = rawResources == null ? java.util.Collections.emptyList()
-                : asList(rawResources, "resourceSpans must be an array");
+        // 显式 null 与缺键区分(对齐 Python dict.get 默认值语义):缺键→空,null→422
+        Object rawResources = payload.containsKey("resourceSpans")
+                ? payload.get("resourceSpans") : new ArrayList<>();
+        List<?> resources = asList(rawResources, "resourceSpans must be an array");
         for (Object resourceSpanObject : resources) {
             Map<String, Object> resourceSpan = asObject(resourceSpanObject);
             Map<String, Object> resource = asObjectOrEmpty(resourceSpanObject instanceof Map
                     ? ((Map<?, ?>) resourceSpan).get("resource") : null);
             Map<String, Object> resourceAttributes = attributes(
                     asListOrEmpty(resource.get("attributes")));
+            Object scopeFallback = resourceSpan.containsKey(
+                    "instrumentationLibrarySpans")
+                    ? resourceSpan.get("instrumentationLibrarySpans") : new ArrayList<>();
             Object scopeSpansRaw = resourceSpan.containsKey("scopeSpans")
-                    ? resourceSpan.get("scopeSpans")
-                    : resourceSpan.get("instrumentationLibrarySpans");
-            if (scopeSpansRaw != null && !(scopeSpansRaw instanceof List)) {
+                    ? resourceSpan.get("scopeSpans") : scopeFallback;
+            if (!(scopeSpansRaw instanceof List)) {
                 throw new IllegalArgumentException("scopeSpans must be an array");
             }
             List<?> scopeSpans = scopeSpansRaw == null
                     ? Collections.emptyList() : (List<?>) scopeSpansRaw;
             for (Object scopeSpanObject : scopeSpans) {
                 Map<String, Object> scopeSpan = asObject(scopeSpanObject);
-                Object rawSpans = scopeSpan.getOrDefault("spans", Collections.emptyList());
+                Object rawSpans = scopeSpan.containsKey("spans")
+                        ? scopeSpan.get("spans") : new ArrayList<>();
                 if (!(rawSpans instanceof List)) {
                     throw new IllegalArgumentException("spans must be an array");
                 }

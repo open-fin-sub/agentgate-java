@@ -593,9 +593,10 @@ class RunAndTaskControllerTest {
                 .andExpect(jsonPath("$.message")
                         .value("unknown Skill version: src-x/skill-y/v1"));
 
+        // unknown TargetDescriptor* 前缀 → 409(对齐 Python _read_lineage 特殊分支)
         mockMvc.perform(get("/api/targets/demo/agent/loan/versions/v99/lineage")
                         .header("user_team_id", TEAM))
-                .andExpect(status().isNotFound())
+                .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message")
                         .value("unknown TargetDescriptor version"));
 

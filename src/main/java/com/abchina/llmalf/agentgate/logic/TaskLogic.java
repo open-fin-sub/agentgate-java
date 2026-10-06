@@ -125,11 +125,25 @@ public class TaskLogic {
                 reportIds.addAll(previous.staticReportIds());
             }
             reportIds.addAll(task.staticReportIds());
+            String expectedTargetSha = null;
+            for (String runId : sortedRunIds) {
+                EvaluationRun run = runLogic.getRun(runId, null);
+                if (run != null && run.manifest() != null
+                        && run.manifest().target() != null) {
+                    expectedTargetSha = run.manifest().target().descriptorSha256();
+                    break;
+                }
+            }
             for (String reportId : reportIds) {
                 SkillAnalysisReportEntity reportEntity = skillAnalysisReportDAO.selectByKey(
                         IdentityDigest.of(reportId));
                 if (reportEntity == null) {
                     throw new IllegalArgumentException("unknown static report");
+                }
+                if (expectedTargetSha != null && !expectedTargetSha
+                        .equals(reportEntity.getTargetDescriptorSha256())) {
+                    throw new IllegalArgumentException(
+                            "static report does not match the task target snapshot");
                 }
                 reports.put(reportEntity.getTargetDescriptorSha256(), reportId);
             }

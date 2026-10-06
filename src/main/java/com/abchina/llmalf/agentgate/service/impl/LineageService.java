@@ -292,7 +292,8 @@ public class LineageService {
             }
         }
         if (filtered.isEmpty()) {
-            throw new AgentException(404, "unknown TargetDescriptor version");
+            // 对齐 Python _read_lineage:unknown TargetDescriptor* → 409
+            throw new AgentException(409, "unknown TargetDescriptor version");
         }
         if (filtered.size() > 1) {
             throw new AgentException(409, "Target version has multiple content hashes");

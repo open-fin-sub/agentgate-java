@@ -39,6 +39,7 @@ public class RunScheduler {
     @Scheduled(fixedDelayString = "${agentgate.scheduling.interval-seconds:10}000")
     public void scan() {
         try {
+            log.info("start Scheduler scan ...");
             runReaderService.failStaleRuns(staleGraceSeconds);
             int due = runSchedulingService.dispatchDueRuns(scanBatchSize).size();
             int waiting = runSchedulingService.dispatchWaitingRuns(scanBatchSize).size();

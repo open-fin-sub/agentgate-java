@@ -62,7 +62,8 @@ public final class DemoCatalog {
         skills.add(SkillDescriptor.of("loan_approval", approvalVersion, "Loan Approval",
                 "Assess a loan application and choose an approval action.",
                 null, null,
-                Collections.singletonList(tools.get(0)), null, null, null));
+                Arrays.asList(tools.get(0), tools.get(1), tools.get(2)), null, null,
+                null));
         skills.add(SkillDescriptor.of("repayment_plan", "repayment-plan-v1",
                 "Repayment Plan",
                 "Calculate repayment installments for a loan application.",

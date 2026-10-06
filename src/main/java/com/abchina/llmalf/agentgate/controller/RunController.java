@@ -466,13 +466,13 @@ public class RunController {
 
     private static String requireString(PydanticErrors errors, Map<String, Object> body,
             String field) {
-        Object raw = body.get(field);
-        if (raw == null) {
+        if (!body.containsKey(field)) {
             errors.missing("body", field, body);
             return null;
         }
-        if (raw instanceof Boolean || raw instanceof Number || raw instanceof List
-                || raw instanceof Map) {
+        Object raw = body.get(field);
+        if (raw == null || raw instanceof Boolean || raw instanceof Number
+                || raw instanceof List || raw instanceof Map) {
             errors.stringType("body", field, raw);
             return null;
         }
@@ -491,47 +491,77 @@ public class RunController {
 
     private static Integer requireInt(PydanticErrors errors, Map<String, Object> body,
             String field) {
-        Object raw = body.get(field);
-        if (raw == null) {
+        if (!body.containsKey(field)) {
             errors.missing("body", field, body);
             return null;
         }
         return optionalInt(errors, body, field);
     }
 
+    /**
+     * pydantic lax 整型转换:数字字符串可解析、bool→0/1、整值浮点收窄;
+     * 小数浮点 → int_from_float 专用消息.
+     */
     private static Integer optionalInt(PydanticErrors errors, Map<String, Object> body,
             String field) {
-        Object raw = body.get(field);
-        if (raw == null) {
+        if (!body.containsKey(field)) {
             return null;
         }
-        if (raw instanceof Boolean || !(raw instanceof Number)) {
-            errors.intType("body", field, raw);
-            return null;
+        Object raw = body.get(field);
+        if (raw instanceof Integer || raw instanceof Long || raw instanceof Short
+                || raw instanceof Byte) {
+            return ((Number) raw).intValue();
+        }
+        if (raw instanceof Boolean) {
+            return (Boolean) raw ? 1 : 0;
         }
         if (raw instanceof Double || raw instanceof Float) {
             double value = ((Number) raw).doubleValue();
-            if (value != Math.floor(value)) {
-                errors.intType("body", field, raw);
+            if (value != Math.floor(value) || Double.isInfinite(value)) {
+                errors.custom("int_from_float", "body", field,
+                        "Input should be a valid integer, "
+                                + "got a number with a fractional part", raw, null);
                 return null;
             }
             return (int) value;
         }
-        return ((Number) raw).intValue();
+        if (raw instanceof String) {
+            try {
+                return Integer.valueOf(((String) raw).trim());
+            } catch (NumberFormatException e) {
+                errors.intParsing("body", field, raw);
+                return null;
+            }
+        }
+        errors.intType("body", field, raw);
+        return null;
     }
 
     private static Double optionalDouble(PydanticErrors errors, Map<String, Object> body,
             String field) {
+        if (!body.containsKey(field)) {
+            return null;
+        }
         Object raw = body.get(field);
-        if (raw == null) {
-            return null;
+        if (raw instanceof Number) {
+            return ((Number) raw).doubleValue();
         }
-        if (raw instanceof Boolean || !(raw instanceof Number)) {
-            errors.custom("float_type", "body", field,
-                    "Input should be a valid number", raw, null);
-            return null;
+        if (raw instanceof Boolean) {
+            return (Boolean) raw ? 1.0 : 0.0;
         }
-        return ((Number) raw).doubleValue();
+        if (raw instanceof String) {
+            try {
+                return Double.valueOf(((String) raw).trim());
+            } catch (NumberFormatException e) {
+                errors.custom("float_parsing", "body", field,
+                        "Input should be a valid number, "
+                                + "unable to parse string as a number", raw, null);
+                return null;
+            }
+        }
+        errors.custom("float_type", "body", field, "Input should be a valid number",
+                raw, null);
+        return null;
     }
 
     private static void rejectExtraKeys(PydanticErrors errors, Map<String, Object> body,
@@ -552,10 +582,18 @@ public class RunController {
         if (value == null) {
             return null;
         }
+        String text = String.valueOf(value);
         try {
-            return java.time.OffsetDateTime.parse(String.valueOf(value));
-        } catch (java.time.format.DateTimeParseException e) {
-            throw new AgentException(422, "Input should be a valid datetime");
+            return java.time.OffsetDateTime.parse(text);
+        } catch (java.time.format.DateTimeParseException offsetError) {
+            try {
+                // date-only → UTC 午夜(pydantic datetime lax 语义)
+                return java.time.LocalDate.parse(text)
+                        .atStartOfDay(java.time.ZoneOffset.UTC)
+                        .toOffsetDateTime();
+            } catch (java.time.format.DateTimeParseException dateError) {
+                throw new AgentException(422, "Input should be a valid datetime");
+            }
         }
     }
 

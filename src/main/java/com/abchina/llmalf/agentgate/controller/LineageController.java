@@ -2,6 +2,7 @@ package com.abchina.llmalf.agentgate.controller;
 
 import com.abchina.llmalf.agentgate.common.AgentException;
 import com.abchina.llmalf.agentgate.common.ApiErrors;
+import com.abchina.llmalf.agentgate.common.PydanticErrors;
 import com.abchina.llmalf.agentgate.common.ResponseBase;
 import com.abchina.llmalf.agentgate.domain.model.target.TargetRef;
 import com.abchina.llmalf.agentgate.domain.model.target.TargetType;
@@ -21,6 +22,55 @@ import java.util.Map;
  */
 @RestController
 public class LineageController {
+
+    private static int pathVersion(PydanticErrors errors, String raw) {
+        Integer parsed;
+        try {
+            parsed = Integer.valueOf(raw);
+        } catch (NumberFormatException e) {
+            errors.intParsing("path", "version", raw);
+            return -1;
+        }
+        if (parsed < 1) {
+            errors.greaterEqual("path", "version", raw, 1);
+            return -1;
+        }
+        return parsed;
+    }
+
+    private static int queryLimit(PydanticErrors errors, String raw) {
+        if (raw == null) {
+            return 50;
+        }
+        Integer parsed;
+        try {
+            parsed = Integer.valueOf(raw.trim());
+        } catch (NumberFormatException e) {
+            errors.intParsing("query", "limit", raw);
+            return -1;
+        }
+        if (parsed < 1) {
+            errors.greaterEqual("query", "limit", raw, 1);
+            return -1;
+        }
+        if (parsed > 200) {
+            errors.lessEqual("query", "limit", raw, 200);
+            return -1;
+        }
+        return parsed;
+    }
+
+    private static TargetType targetTypeOf(PydanticErrors errors, String raw) {
+        try {
+            return TargetType.fromWireValue(raw);
+        } catch (IllegalArgumentException e) {
+            errors.custom("enum", "path", "target_type",
+                    "Input should be 'agent' or 'skill'", raw,
+                    java.util.Collections.singletonMap("expected",
+                            "'agent' or 'skill'"));
+            return null;
+        }
+    }
 
     private final LineageService lineageService;
 
@@ -51,10 +101,14 @@ public class LineageController {
     @GetMapping("/api/datasets/{datasetId}/versions/{version}/lineage")
     public ResponseBase<Map<String, Object>> datasetLineage(
             @PathVariable("datasetId") String datasetId,
-            @PathVariable("version") int version,
-            @RequestParam(value = "limit", required = false, defaultValue = "50") int limit) {
+            @PathVariable("version") String version,
+            @RequestParam(value = "limit", required = false) String limit) {
+        PydanticErrors errors = new PydanticErrors();
+        int versionValue = pathVersion(errors, version);
+        int limitValue = queryLimit(errors, limit);
+        errors.throwIfAny();
         return ResponseBase.success(ApiErrors.notFound(() ->
-                lineageService.datasetLineage(datasetId, version, limit)));
+                lineageService.datasetLineage(datasetId, versionValue, limitValue)));
     }
 
     /**
@@ -69,11 +123,15 @@ public class LineageController {
     @GetMapping("/api/datasets/{datasetId}/versions/{version}/cases/{caseId}/lineage")
     public ResponseBase<Map<String, Object>> caseLineage(
             @PathVariable("datasetId") String datasetId,
-            @PathVariable("version") int version,
+            @PathVariable("version") String version,
             @PathVariable("caseId") String caseId,
-            @RequestParam(value = "limit", required = false, defaultValue = "50") int limit) {
+            @RequestParam(value = "limit", required = false) String limit) {
+        PydanticErrors errors = new PydanticErrors();
+        int versionValue = pathVersion(errors, version);
+        int limitValue = queryLimit(errors, limit);
+        errors.throwIfAny();
         return ResponseBase.success(ApiErrors.notFound(() ->
-                lineageService.caseLineage(datasetId, version, caseId, limit)));
+                lineageService.caseLineage(datasetId, versionValue, caseId, limitValue)));
     }
 
     /**
@@ -94,11 +152,14 @@ public class LineageController {
             @PathVariable("targetId") String targetId,
             @PathVariable("version") String version,
             @RequestParam(value = "content_sha256", required = false) String contentSha256,
-            @RequestParam(value = "limit", required = false, defaultValue = "50") int limit) {
-        TargetRef ref = TargetRef.of(sourceId, TargetType.fromWireValue(targetType),
-                targetId, version);
+            @RequestParam(value = "limit", required = false) String limit) {
+        PydanticErrors errors = new PydanticErrors();
+        TargetType type = targetTypeOf(errors, targetType);
+        int limitValue = queryLimit(errors, limit);
+        errors.throwIfAny();
+        TargetRef ref = TargetRef.of(sourceId, type, targetId, version);
         return ResponseBase.success(ApiErrors.notFound(() ->
-                lineageService.targetLineage(ref, contentSha256, limit)));
+                lineageService.targetLineage(ref, contentSha256, limitValue)));
     }
 
     /**
@@ -117,10 +178,13 @@ public class LineageController {
             @PathVariable("skillId") String skillId,
             @PathVariable("version") String version,
             @RequestParam(value = "content_sha256", required = false) String contentSha256,
-            @RequestParam(value = "limit", required = false, defaultValue = "50") int limit) {
+            @RequestParam(value = "limit", required = false) String limit) {
+        PydanticErrors errors = new PydanticErrors();
+        int limitValue = queryLimit(errors, limit);
+        errors.throwIfAny();
         return ResponseBase.success(ApiErrors.notFound(() ->
                 lineageService.skillLineage(sourceId, skillId, version, contentSha256,
-                        limit)));
+                        limitValue)));
     }
 
     /**
@@ -137,9 +201,12 @@ public class LineageController {
             @PathVariable("evaluatorId") String evaluatorId,
             @PathVariable("version") String version,
             @RequestParam(value = "content_sha256", required = false) String contentSha256,
-            @RequestParam(value = "limit", required = false, defaultValue = "50") int limit) {
+            @RequestParam(value = "limit", required = false) String limit) {
+        PydanticErrors errors = new PydanticErrors();
+        int limitValue = queryLimit(errors, limit);
+        errors.throwIfAny();
         return ResponseBase.success(ApiErrors.notFound(() ->
                 lineageService.evaluatorLineage(evaluatorId, version, contentSha256,
-                        limit)));
+                        limitValue)));
     }
 }
