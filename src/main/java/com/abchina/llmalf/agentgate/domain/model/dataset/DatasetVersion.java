@@ -13,6 +13,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * 数据集版本快照.
@@ -69,7 +70,7 @@ public final class DatasetVersion {
      * @return 版本实例
      */
     public static DatasetVersion of(String datasetId, List<Case> cases) {
-        return of(java.util.UUID.randomUUID().toString(), datasetId, "", "", null,
+        return of(UUID.randomUUID().toString(), datasetId, "", "", null,
                 DatasetVersionStatus.DRAFT, null, cases, "", null, null, null, "", "", "", "");
     }
 

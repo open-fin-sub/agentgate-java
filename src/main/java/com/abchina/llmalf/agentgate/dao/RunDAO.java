@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 /**
  * 评测 Run DAO (MyBatis-Plus Mapper).
  *
@@ -19,7 +21,7 @@ public interface RunDAO extends BaseMapper<RunEntity> {
      * @param userTeamKey 参数
      * @return 实体列表
      */
-    java.util.List<RunEntity> selectByTeamKey(@Param("userTeamKey") byte[] userTeamKey);
+    List<RunEntity> selectByTeamKey(@Param("userTeamKey") byte[] userTeamKey);
 
     /**
      * 按状态(+可选团队)查询.
@@ -28,7 +30,7 @@ public interface RunDAO extends BaseMapper<RunEntity> {
      * @param userTeamKey 参数
      * @return 实体列表
      */
-    java.util.List<RunEntity> selectByStatus(@Param("status") String status, @Param("userTeamKey") byte[] userTeamKey);
+    List<RunEntity> selectByStatus(@Param("status") String status, @Param("userTeamKey") byte[] userTeamKey);
 
     /**
      * 按主键锁定读(claim/cancel 用).
@@ -44,7 +46,7 @@ public interface RunDAO extends BaseMapper<RunEntity> {
      * @param status 参数
      * @return 实体列表
      */
-    java.util.List<RunEntity> selectByStatusForUpdate(@Param("status") String status);
+    List<RunEntity> selectByStatusForUpdate(@Param("status") String status);
 
 
     /**

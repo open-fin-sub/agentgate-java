@@ -1,14 +1,18 @@
 package com.abchina.llmalf.agentgate.service.impl;
 
 import com.abchina.llmalf.agentgate.common.AgentException;
+import com.abchina.llmalf.agentgate.domain.model.cases.Case;
+import com.abchina.llmalf.agentgate.domain.model.dataset.DatasetVersion;
+import com.abchina.llmalf.agentgate.domain.model.evaluator.EvaluatorSpec;
 import com.abchina.llmalf.agentgate.domain.model.metric.MetricSummary;
 import com.abchina.llmalf.agentgate.domain.model.report.EvaluationReport;
 import com.abchina.llmalf.agentgate.domain.model.result.EvaluationResult;
 import com.abchina.llmalf.agentgate.domain.model.result.Outcome;
-import com.abchina.llmalf.agentgate.domain.model.run.EvaluationRun;
+import com.abchina.llmalf.agentgate.domain.model.target.TargetRef;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -62,16 +66,16 @@ public class ComparisonService {
     }
 
     private static void validateCompatible(EvaluationReport baseline, EvaluationReport candidate) {
-        com.abchina.llmalf.agentgate.domain.model.target.TargetRef baselineRef = baseline.run().manifest().target().ref();
-        com.abchina.llmalf.agentgate.domain.model.target.TargetRef candidateRef = candidate.run().manifest().target().ref();
+        TargetRef baselineRef = baseline.run().manifest().target().ref();
+        TargetRef candidateRef = candidate.run().manifest().target().ref();
         if (!baselineRef.sourceId().equals(candidateRef.sourceId())
                 || baselineRef.targetType() != candidateRef.targetType()
                 || !baselineRef.externalTargetId().equals(candidateRef.externalTargetId())) {
             throw new AgentException(409,
                     "reports reference different Agent or Skill targets");
         }
-        com.abchina.llmalf.agentgate.domain.model.dataset.DatasetVersion baselineDataset = baseline.run().manifest().dataset();
-        com.abchina.llmalf.agentgate.domain.model.dataset.DatasetVersion candidateDataset = candidate.run().manifest().dataset();
+        DatasetVersion baselineDataset = baseline.run().manifest().dataset();
+        DatasetVersion candidateDataset = candidate.run().manifest().dataset();
         if (!baselineDataset.datasetId().equals(candidateDataset.datasetId())) {
             throw new AgentException(409, "reports reference different Datasets");
         }
@@ -103,21 +107,21 @@ public class ComparisonService {
 
     private static List<String> caseIds(EvaluationReport report) {
         List<String> ids = new ArrayList<>();
-        for (com.abchina.llmalf.agentgate.domain.model.cases.Case caseItem : report.run().manifest().executionCases()) {
+        for (Case caseItem : report.run().manifest().executionCases()) {
             ids.add(caseItem.id());
         }
         return ids;
     }
 
     private static List<List<String>> primarySignature(EvaluationReport report) {
-        Map<String, com.abchina.llmalf.agentgate.domain.model.evaluator.EvaluatorSpec> specs = new HashMap<>();
-        for (com.abchina.llmalf.agentgate.domain.model.evaluator.EvaluatorSpec spec : report.run().manifest().evaluatorSpecs()) {
+        Map<String, EvaluatorSpec> specs = new HashMap<>();
+        for (EvaluatorSpec spec : report.run().manifest().evaluatorSpecs()) {
             specs.put(spec.id(), spec);
         }
         List<List<String>> signature = new ArrayList<>();
         for (String evaluatorId : report.run().manifest().primaryEvaluatorIds()) {
-            com.abchina.llmalf.agentgate.domain.model.evaluator.EvaluatorSpec spec = specs.get(evaluatorId);
-            signature.add(java.util.Arrays.asList(evaluatorId, spec.version(),
+            EvaluatorSpec spec = specs.get(evaluatorId);
+            signature.add(Arrays.asList(evaluatorId, spec.version(),
                     spec.contentSha256()));
         }
         return signature;
@@ -161,7 +165,7 @@ public class ComparisonService {
             candidateResults.put(item.caseId() + "\n" + item.evaluatorId(), item);
         }
         List<Map<String, Object>> deltas = new ArrayList<>();
-        for (com.abchina.llmalf.agentgate.domain.model.cases.Case caseItem : baseline.run().manifest().executionCases()) {
+        for (Case caseItem : baseline.run().manifest().executionCases()) {
             for (String evaluatorId : baseline.run().manifest().primaryEvaluatorIds()) {
                 String key = caseItem.id() + "\n" + evaluatorId;
                 EvaluationResult before = baselineResults.get(key);

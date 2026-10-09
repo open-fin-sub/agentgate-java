@@ -1,5 +1,6 @@
 package com.abchina.llmalf.agentgate.service.vo;
 
+import com.abchina.llmalf.agentgate.domain.DomainValidations;
 import com.abchina.llmalf.agentgate.domain.model.credential.ApiKeyMetadata;
 import lombok.Data;
 
@@ -42,9 +43,9 @@ public class ApiKeyVO {
         vo.setName(metadata.name());
         vo.setProviderId(metadata.providerId());
         vo.setScope(metadata.scope().wireValue());
-        vo.setCreatedAt(com.abchina.llmalf.agentgate.domain.DomainValidations
+        vo.setCreatedAt(DomainValidations
                 .isoFormat(metadata.createdAt()));
-        vo.setUpdatedAt(com.abchina.llmalf.agentgate.domain.DomainValidations
+        vo.setUpdatedAt(DomainValidations
                 .isoFormat(metadata.updatedAt()));
         return vo;
     }

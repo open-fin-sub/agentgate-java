@@ -309,7 +309,7 @@ public final class PayloadValues {
         if (value == null || value.isEmpty()) {
             return null;
         }
-        return com.abchina.llmalf.agentgate.domain.DomainValidations.requireNonBlank(value, field);
+        return DomainValidations.requireNonBlank(value, field);
     }
 
     private static List<String> toStringList(Object value, String field) {

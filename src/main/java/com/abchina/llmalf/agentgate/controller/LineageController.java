@@ -1,6 +1,5 @@
 package com.abchina.llmalf.agentgate.controller;
 
-import com.abchina.llmalf.agentgate.common.AgentException;
 import com.abchina.llmalf.agentgate.common.ApiErrors;
 import com.abchina.llmalf.agentgate.common.PydanticErrors;
 import com.abchina.llmalf.agentgate.common.ResponseBase;
@@ -12,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -66,7 +66,7 @@ public class LineageController {
         } catch (IllegalArgumentException e) {
             errors.custom("enum", "path", "target_type",
                     "Input should be 'agent' or 'skill'", raw,
-                    java.util.Collections.singletonMap("expected",
+                    Collections.singletonMap("expected",
                             "'agent' or 'skill'"));
             return null;
         }

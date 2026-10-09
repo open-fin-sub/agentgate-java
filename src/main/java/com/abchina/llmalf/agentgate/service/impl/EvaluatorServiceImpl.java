@@ -18,7 +18,9 @@ import com.abchina.llmalf.agentgate.logic.EvaluatorVersioning;
 import com.abchina.llmalf.agentgate.service.vo.DraftDefinitionRequest;
 import org.springframework.stereotype.Service;
 
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -224,7 +226,7 @@ public class EvaluatorServiceImpl {
     public List<EvaluatorSpec> listVersions(String evaluatorId) {
         EvaluatorSpec builtin = EvaluatorCatalog.builtinSpec(evaluatorId);
         if (builtin != null) {
-            return java.util.Collections.singletonList(builtin);
+            return Collections.singletonList(builtin);
         }
         userEvaluator(evaluatorId);
         return evaluatorLogic.listEvaluatorVersions(evaluatorId, teamId());
@@ -341,7 +343,7 @@ public class EvaluatorServiceImpl {
     private static List<Map.Entry<String, Evaluator>> builtinOrderEntries() {
         List<Map.Entry<String, Evaluator>> ordered = new ArrayList<>();
         for (EvaluatorSpec spec : EvaluatorCatalog.builtinSpecs()) {
-            ordered.add(new java.util.AbstractMap.SimpleEntry<>(spec.id(),
+            ordered.add(new SimpleEntry<>(spec.id(),
                     EvaluatorCatalog.builtinEvaluator(spec.id())));
         }
         return ordered;

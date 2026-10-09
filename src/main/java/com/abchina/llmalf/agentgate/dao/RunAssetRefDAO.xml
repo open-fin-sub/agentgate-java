@@ -11,9 +11,9 @@
     </select>
 
     <select id="selectByKey" resultType="com.abchina.llmalf.agentgate.dao.entity.RunAssetRefEntity">
-        SELECT * FROM agentgate_run_asset_refs WHERE id_key = #{idKey}
+        SELECT * FROM agentgate_run_asset_refs WHERE reference_key = #{referenceKey}
     </select>
     <delete id="deleteByKey">
-        DELETE FROM agentgate_run_asset_refs WHERE id_key = #{idKey}
+        DELETE FROM agentgate_run_asset_refs WHERE reference_key = #{referenceKey}
     </delete>
 </mapper>

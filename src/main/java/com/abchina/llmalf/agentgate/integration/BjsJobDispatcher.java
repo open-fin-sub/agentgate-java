@@ -1,18 +1,24 @@
 package com.abchina.llmalf.agentgate.integration;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.Proxy;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -48,7 +54,7 @@ public class BjsJobDispatcher {
      * @param jobId 任务 id(application.yml 经同名环境变量占位注入)
      * @param timeoutSeconds 超时秒数
      */
-    @org.springframework.beans.factory.annotation.Autowired
+    @Autowired
     public BjsJobDispatcher(
             @Value("${agentgate.bjs.submit-url:}") String submitUrl,
             @Value("${agentgate.bjs.job-id:}") String jobId,
@@ -130,30 +136,51 @@ public class BjsJobDispatcher {
                 .post(RequestBody.create(new byte[0], null))
                 .header("Accept", "application/json")
                 .build();
+        long startedAt = System.nanoTime();
+        log.info("External BJS call started: operation=submit run_id={} endpoint={} "
+                        + "timeout_seconds={}",
+                runId, url, timeoutSeconds);
         String body;
+        int httpStatus;
+        boolean mocked = false;
         try (Response response = client.newCall(request).execute()) {
+            httpStatus = response.code();
             body = response.body() == null ? "" : response.body().string();
         } catch (IOException e) {
-            log.warn("BJS submission mocked (endpoint unreachable): run_id={}, {}", runId,
-                    e.getClass().getSimpleName());
+            mocked = true;
+            httpStatus = 200;
+            log.warn("External BJS call degraded: operation=submit run_id={} result=mock_success "
+                            + "elapsed_ms={} error_type={}",
+                    runId, elapsedMillis(startedAt), e.getClass().getSimpleName());
             body = "{\"code\":\"0\",\"message\":\"success\"}";
         }
-        com.fasterxml.jackson.databind.JsonNode payload;
+        JsonNode payload;
         try {
-            payload = new com.fasterxml.jackson.databind.ObjectMapper().readTree(body);
+            payload = new ObjectMapper().readTree(body);
         } catch (IOException e) {
+            log.warn("External BJS call completed: operation=submit run_id={} http_status={} "
+                            + "result=invalid_json mocked={} elapsed_ms={}",
+                    runId, httpStatus, mocked, elapsedMillis(startedAt));
             throw new IllegalStateException("BJS submission returned invalid JSON", e);
         }
         if (payload == null || !payload.isObject()) {
+            log.warn("External BJS call completed: operation=submit run_id={} http_status={} "
+                            + "result=invalid_response mocked={} elapsed_ms={}",
+                    runId, httpStatus, mocked, elapsedMillis(startedAt));
             throw new IllegalStateException("BJS submission returned an invalid response");
         }
         String code = payload.path("code").asText("");
         String message = payload.path("message").asText("");
         if (!"0".equals(code) || !"success".equals(message)) {
+            log.warn("External BJS call completed: operation=submit run_id={} http_status={} "
+                            + "response_code={} result=rejected mocked={} elapsed_ms={}",
+                    runId, httpStatus, code, mocked, elapsedMillis(startedAt));
             throw new IllegalStateException(
                     "BJS submission rejected: code='" + code + "', message='" + message + "'");
         }
-        log.info("BJS submission accepted: run_id={}", runId);
+        log.info("External BJS call completed: operation=submit run_id={} http_status={} "
+                        + "response_code={} result=accepted mocked={} elapsed_ms={}",
+                runId, httpStatus, code, mocked, elapsedMillis(startedAt));
     }
 
     /**
@@ -179,7 +206,7 @@ public class BjsJobDispatcher {
                     SUBMIT_URL_ENV + " must be a valid HTTP(S) URL");
         }
         String scheme = uri.getScheme() == null ? "" : uri.getScheme().toLowerCase(
-                java.util.Locale.ROOT);
+                Locale.ROOT);
         int port = uri.getPort();
         boolean hasQuery = uri.getRawQuery() != null;
         boolean hasFragment = uri.getRawFragment() != null;
@@ -210,9 +237,13 @@ public class BjsJobDispatcher {
 
     private static String urlEncode(String value) {
         try {
-            return java.net.URLEncoder.encode(value, "UTF-8");
-        } catch (java.io.UnsupportedEncodingException e) {
+            return URLEncoder.encode(value, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
             throw new IllegalStateException("UTF-8 unsupported", e);
         }
+    }
+
+    private static long elapsedMillis(long startedAt) {
+        return (System.nanoTime() - startedAt) / 1_000_000L;
     }
 }

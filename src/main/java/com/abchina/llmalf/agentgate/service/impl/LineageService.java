@@ -12,17 +12,18 @@ import com.abchina.llmalf.agentgate.domain.model.target.SkillDescriptor;
 import com.abchina.llmalf.agentgate.domain.model.target.TargetDescriptor;
 import com.abchina.llmalf.agentgate.domain.model.target.TargetRef;
 import com.abchina.llmalf.agentgate.domain.model.target.TargetType;
+import com.abchina.llmalf.agentgate.logic.DatasetLogic;
 import com.abchina.llmalf.agentgate.logic.RunLogic;
 import com.abchina.llmalf.agentgate.logic.TargetLogic;
-import com.abchina.llmalf.agentgate.logic.DatasetLogic;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -400,10 +401,10 @@ public class LineageService {
     private static Graph graph(String rootId, Map<String, Node> nodes,
             Set<List<String>> edges) {
         List<Node> ordered = new ArrayList<>(nodes.values());
-        ordered.sort(java.util.Comparator.comparing((Node node) -> node.kind)
+        ordered.sort(Comparator.comparing((Node node) -> node.kind)
                 .thenComparing(node -> node.id));
         List<List<String>> orderedEdges = new ArrayList<>(edges);
-        orderedEdges.sort(java.util.Comparator
+        orderedEdges.sort(Comparator
                 .comparing((List<String> edge) -> edge.get(2))
                 .thenComparing(edge -> edge.get(0))
                 .thenComparing(edge -> edge.get(1)));
@@ -452,17 +453,17 @@ public class LineageService {
                 return false;
             }
             Node node = (Node) other;
-            return java.util.Objects.equals(id, node.id)
-                    && java.util.Objects.equals(kind, node.kind)
-                    && java.util.Objects.equals(externalId, node.externalId)
-                    && java.util.Objects.equals(label, node.label)
-                    && java.util.Objects.equals(version, node.version)
-                    && java.util.Objects.equals(contentSha256, node.contentSha256);
+            return Objects.equals(id, node.id)
+                    && Objects.equals(kind, node.kind)
+                    && Objects.equals(externalId, node.externalId)
+                    && Objects.equals(label, node.label)
+                    && Objects.equals(version, node.version)
+                    && Objects.equals(contentSha256, node.contentSha256);
         }
 
         @Override
         public int hashCode() {
-            return java.util.Objects.hash(id, kind, externalId, label, version, contentSha256);
+            return Objects.hash(id, kind, externalId, label, version, contentSha256);
         }
     }
 

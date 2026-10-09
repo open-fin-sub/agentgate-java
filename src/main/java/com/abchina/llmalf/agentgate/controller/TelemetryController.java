@@ -2,6 +2,7 @@ package com.abchina.llmalf.agentgate.controller;
 
 import com.abchina.llmalf.agentgate.integration.OtlpIngest;
 import com.abchina.llmalf.agentgate.logic.TraceLogic;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -69,7 +70,7 @@ public class TelemetryController {
         JsonNode root;
         try {
             root = MAPPER.readTree(body == null ? "" : body);
-        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+        } catch (JsonProcessingException e) {
             return detail(HttpStatus.UNPROCESSABLE_ENTITY,
                     pythonJsonError(body, e));
         }
@@ -106,7 +107,7 @@ public class TelemetryController {
      * (覆盖 Expecting value / Extra data 两类常见形态,其余回退 Jackson 消息).
      */
     private static String pythonJsonError(String body,
-            com.fasterxml.jackson.core.JsonProcessingException e) {
+            JsonProcessingException e) {
         String message = e.getMessage() == null ? "" : e.getMessage();
         int line = e.getLocation() == null ? 1 : e.getLocation().getLineNr();
         int column = e.getLocation() == null ? 1 : e.getLocation().getColumnNr();

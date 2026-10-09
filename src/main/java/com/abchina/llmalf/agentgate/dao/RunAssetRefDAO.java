@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 /**
  * Run 资产引用 DAO (MyBatis-Plus Mapper).
  *
@@ -19,7 +21,7 @@ public interface RunAssetRefDAO extends BaseMapper<RunAssetRefEntity> {
      * @param assetLookupKey 参数
      * @return 实体列表
      */
-    java.util.List<RunAssetRefEntity> selectByAssetLookupKey(@Param("assetLookupKey") byte[] assetLookupKey);
+    List<RunAssetRefEntity> selectByAssetLookupKey(@Param("assetLookupKey") byte[] assetLookupKey);
 
     /**
      * 按 Run 摘要查询.
@@ -27,22 +29,22 @@ public interface RunAssetRefDAO extends BaseMapper<RunAssetRefEntity> {
      * @param runKey 参数
      * @return 实体列表
      */
-    java.util.List<RunAssetRefEntity> selectByRunKey(@Param("runKey") byte[] runKey);
+    List<RunAssetRefEntity> selectByRunKey(@Param("runKey") byte[] runKey);
 
 
     /**
      * 按主键查询(BINARY 主键不走 MP selectById,数组参数绑定不可靠).
      *
-     * @param idKey 主键摘要
+     * @param referenceKey 引用主键摘要
      * @return 实体(可空)
      */
-    RunAssetRefEntity selectByKey(@Param("idKey") byte[] idKey);
+    RunAssetRefEntity selectByKey(@Param("referenceKey") byte[] referenceKey);
 
     /**
      * 按主键删除.
      *
-     * @param idKey 主键摘要
+     * @param referenceKey 引用主键摘要
      * @return 影响行数
      */
-    int deleteByKey(@Param("idKey") byte[] idKey);
+    int deleteByKey(@Param("referenceKey") byte[] referenceKey);
 }

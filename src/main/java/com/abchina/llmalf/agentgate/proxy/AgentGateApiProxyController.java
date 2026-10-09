@@ -91,22 +91,28 @@ public class AgentGateApiProxyController {
         HttpMethod httpMethod = HttpMethod.resolve(method);
 
         long start = System.currentTimeMillis();
-        log.info("代理请求转发: {} {} -> {}", method, pathAfterContext, targetUrl);
+        log.info("External proxy call started: method={} path={} target_base={} "
+                        + "request_bytes={}",
+                method, pathAfterContext, proxyConfig.getTargetBaseUrl(),
+                body == null ? 0 : body.length);
 
         try {
             ResponseEntity<byte[]> response = proxyRestTemplate.exchange(
                     targetUrl, httpMethod, entity, byte[].class);
 
             long elapsed = System.currentTimeMillis() - start;
-            log.info("代理响应返回: {} {} status={} 耗时={}ms",
-                    method, pathAfterContext, response.getStatusCodeValue(), elapsed);
+            log.info("External proxy call completed: method={} path={} status={} "
+                            + "response_bytes={} elapsed_ms={}",
+                    method, pathAfterContext, response.getStatusCodeValue(),
+                    response.getBody() == null ? 0 : response.getBody().length, elapsed);
 
             HttpHeaders responseHeaders = buildResponseHeaders(response.getHeaders());
             return new ResponseEntity<>(response.getBody(), responseHeaders, response.getStatusCode());
         } catch (Exception e) {
             long elapsed = System.currentTimeMillis() - start;
-            log.error("代理请求异常: {} {} 耗时={}ms error={}",
-                    method, pathAfterContext, elapsed, e.getMessage(), e);
+            log.error("External proxy call failed: method={} path={} elapsed_ms={} "
+                            + "error_type={}",
+                    method, pathAfterContext, elapsed, e.getClass().getSimpleName(), e);
             throw new RuntimeException("代理请求失败: " + e.getMessage(), e);
         }
     }

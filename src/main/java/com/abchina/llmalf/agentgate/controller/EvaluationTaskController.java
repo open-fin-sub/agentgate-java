@@ -3,11 +3,10 @@ package com.abchina.llmalf.agentgate.controller;
 import com.abchina.llmalf.agentgate.common.AgentException;
 import com.abchina.llmalf.agentgate.common.PydanticErrors;
 import com.abchina.llmalf.agentgate.common.ResponseBase;
+import com.abchina.llmalf.agentgate.common.UserContextHolder;
 import com.abchina.llmalf.agentgate.domain.model.evaluationtask.EvaluationTask;
 import com.abchina.llmalf.agentgate.domain.model.evaluationtask.EvaluationTaskKind;
-import com.abchina.llmalf.agentgate.logic.RunLogic;
-import com.abchina.llmalf.agentgate.logic.TaskLogic;
-import com.abchina.llmalf.agentgate.common.UserContextHolder;
+import com.abchina.llmalf.agentgate.service.impl.EvaluationTaskService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -16,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -29,12 +29,10 @@ import java.util.Map;
 @RequestMapping("/api/evaluation-tasks")
 public class EvaluationTaskController {
 
-    private final TaskLogic taskLogic;
-    private final RunLogic runLogic;
+    private final EvaluationTaskService evaluationTaskService;
 
-    public EvaluationTaskController(TaskLogic taskLogic, RunLogic runLogic) {
-        this.taskLogic = taskLogic;
-        this.runLogic = runLogic;
+    public EvaluationTaskController(EvaluationTaskService evaluationTaskService) {
+        this.evaluationTaskService = evaluationTaskService;
     }
 
     /**
@@ -46,10 +44,8 @@ public class EvaluationTaskController {
     public ResponseBase<List<Object>> listTasks() {
         String teamId = UserContextHolder.current().userTeamId();
         List<Object> payloads = new ArrayList<>();
-        for (EvaluationTask task : taskLogic.listEvaluationTasks()) {
-            if (allRunsVisible(task, teamId)) {
-                payloads.add(task.toPayload());
-            }
+        for (EvaluationTask task : evaluationTaskService.listVisibleTasks(teamId)) {
+            payloads.add(task.toPayload());
         }
         return ResponseBase.success(payloads);
     }
@@ -62,10 +58,8 @@ public class EvaluationTaskController {
      */
     @GetMapping("/{taskId}")
     public ResponseBase<Object> getTask(@PathVariable("taskId") String taskId) {
-        EvaluationTask task = taskLogic.getEvaluationTask(taskId);
-        if (task == null || !allRunsVisible(task, UserContextHolder.current().userTeamId())) {
-            throw new AgentException(404, "unknown evaluation task");
-        }
+        EvaluationTask task = evaluationTaskService.getVisibleTask(taskId,
+                UserContextHolder.current().userTeamId());
         return ResponseBase.success(task.toPayload());
     }
 
@@ -99,7 +93,7 @@ public class EvaluationTaskController {
                 } catch (IllegalArgumentException e) {
                     errors.custom("enum", "body", "kind",
                             "Input should be 'single', 'ab' or 'stability'",
-                            rawKind, java.util.Collections.singletonMap("expected",
+                            rawKind, Collections.singletonMap("expected",
                                     "'single', 'ab' or 'stability'"));
                 }
             }
@@ -126,47 +120,7 @@ public class EvaluationTaskController {
                     pydanticTaskError(e.getMessage(), taskId, taskKind, runIds,
                             staticReportIds));
         }
-        List<com.abchina.llmalf.agentgate.domain.model.run.EvaluationRun> runs =
-                new ArrayList<>();
-        for (String runId : runIds) {
-            com.abchina.llmalf.agentgate.domain.model.run.EvaluationRun run =
-                    runLogic.getRun(runId, teamId);
-            if (run == null) {
-                throw new AgentException(404, "task references an unknown run");
-            }
-            runs.add(run);
-        }
-        if (taskKind == EvaluationTaskKind.STABILITY) {
-            for (com.abchina.llmalf.agentgate.domain.model.run.EvaluationRun run : runs) {
-                if (!com.abchina.llmalf.agentgate.logic.StorageModels.samePayload(
-                        runs.get(0).manifest().toPayload(),
-                        run.manifest().toPayload())) {
-                    throw new AgentException(409,
-                            "stability requires identical run manifests");
-                }
-            }
-        }
-        if (taskKind == EvaluationTaskKind.AB && runs.size() == 2) {
-            validateAbPair(runs.get(0), runs.get(1));
-        }
-        EvaluationTask saved;
-        try {
-            saved = taskLogic.saveTask(task);
-        } catch (IllegalArgumentException e) {
-            String m = e.getMessage() == null ? "" : e.getMessage();
-            if (m.contains("immutable")) {
-                throw new AgentException(409, m);
-            }
-            if (m.contains("unknown static report")) {
-                throw new AgentException(404,
-                        "task references an unknown static report");
-            }
-            if (m.contains("unknown EvaluationRun")) {
-                throw new AgentException(404, "task references an unknown run");
-            }
-            // 其余域校验冲突统一 409(对齐 Python ValueError 分支)
-            throw new AgentException(409, m);
-        }
+        EvaluationTask saved = evaluationTaskService.saveTask(task, teamId);
         return ResponseBase.success(saved.toPayload());
     }
 
@@ -261,45 +215,4 @@ public class EvaluationTaskController {
         return values;
     }
 
-    private static void validateAbPair(
-            com.abchina.llmalf.agentgate.domain.model.run.EvaluationRun left,
-            com.abchina.llmalf.agentgate.domain.model.run.EvaluationRun right) {
-        com.abchina.llmalf.agentgate.domain.model.target.TargetRef a = left.manifest()
-                .target().ref();
-        com.abchina.llmalf.agentgate.domain.model.target.TargetRef b = right.manifest()
-                .target().ref();
-        if (!a.sourceId().equals(b.sourceId()) || a.targetType() != b.targetType()
-                || !a.externalTargetId().equals(b.externalTargetId())) {
-            throw new AgentException(409, "A/B must evaluate the same target");
-        }
-        if (a.externalVersionId().equals(b.externalVersionId())) {
-            throw new AgentException(409, "A/B requires distinct target versions");
-        }
-        String[] fields = {"dataset", "selected_case_ids", "evaluator_specs",
-                "primary_evaluator_ids", "metric_plan", "gate_spec", "timeout_seconds",
-                "max_retries", "max_parallel_cases"};
-        for (String field : fields) {
-            Object leftValue = manifestField(left, field);
-            Object rightValue = manifestField(right, field);
-            if (!com.abchina.llmalf.agentgate.logic.StorageModels.samePayload(leftValue,
-                    rightValue)) {
-                throw new AgentException(409, "A/B conditions differ: " + field);
-            }
-        }
-    }
-
-    private static Object manifestField(
-            com.abchina.llmalf.agentgate.domain.model.run.EvaluationRun run, String field) {
-        Map<?, ?> payload = (Map<?, ?>) run.manifest().toPayload();
-        return payload.get(field);
-    }
-
-    private boolean allRunsVisible(EvaluationTask task, String teamId) {
-        for (String runId : task.runIds()) {
-            if (runLogic.getRun(runId, teamId) == null) {
-                return false;
-            }
-        }
-        return true;
-    }
 }

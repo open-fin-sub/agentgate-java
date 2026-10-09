@@ -4,10 +4,9 @@ import com.abchina.llmalf.agentgate.common.AgentException;
 import com.abchina.llmalf.agentgate.common.UserContext;
 import com.abchina.llmalf.agentgate.common.UserContextHolder;
 import com.abchina.llmalf.agentgate.domain.DomainValidations;
-import com.abchina.llmalf.agentgate.domain.model.cases.Case;
 import com.abchina.llmalf.agentgate.domain.model.dataset.DatasetVersion;
-import com.abchina.llmalf.agentgate.domain.model.dataset.DatasetVersionStatus;
-import com.abchina.llmalf.agentgate.domain.model.evaluator.EvaluatorKind;
+import com.abchina.llmalf.agentgate.domain.model.evaluationtask.EvaluationTask;
+import com.abchina.llmalf.agentgate.domain.model.evaluationtask.EvaluationTaskKind;
 import com.abchina.llmalf.agentgate.domain.model.evaluator.EvaluatorRef;
 import com.abchina.llmalf.agentgate.domain.model.evaluator.EvaluatorSpec;
 import com.abchina.llmalf.agentgate.domain.model.gate.ReleaseGateSpec;
@@ -16,15 +15,15 @@ import com.abchina.llmalf.agentgate.domain.model.run.EvaluationRun;
 import com.abchina.llmalf.agentgate.domain.model.run.RunLifecycle;
 import com.abchina.llmalf.agentgate.domain.model.run.RunManifest;
 import com.abchina.llmalf.agentgate.domain.model.run.RunStatus;
+import com.abchina.llmalf.agentgate.domain.model.target.TargetDescriptor;
 import com.abchina.llmalf.agentgate.domain.model.target.TargetRef;
 import com.abchina.llmalf.agentgate.domain.model.target.TargetSnapshot;
 import com.abchina.llmalf.agentgate.domain.model.target.TargetType;
-import com.abchina.llmalf.agentgate.logic.DatasetLogic;
-import com.abchina.llmalf.agentgate.logic.EvaluatorCatalog;
-import com.abchina.llmalf.agentgate.logic.RunLogic;
-import com.abchina.llmalf.agentgate.logic.TaskLogic;
-import com.abchina.llmalf.agentgate.logic.TargetLogic;
 import com.abchina.llmalf.agentgate.integration.BjsJobDispatcher;
+import com.abchina.llmalf.agentgate.logic.DatasetLogic;
+import com.abchina.llmalf.agentgate.logic.RunLogic;
+import com.abchina.llmalf.agentgate.logic.TargetLogic;
+import com.abchina.llmalf.agentgate.logic.TaskLogic;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -32,12 +31,11 @@ import org.springframework.stereotype.Service;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Collections;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.UUID;
 
 /**
  * Run 创建与派发服务.
@@ -51,7 +49,9 @@ import java.util.Set;
 @Service
 public class RunLaunchService {
 
-    /** demo 目录固定时间戳(对齐 DEMO_CREATED_AT) */
+    /**
+     * demo 目录固定时间戳(对齐 DEMO_CREATED_AT)
+     */
     public static final OffsetDateTime DEMO_CREATED_AT =
             OffsetDateTime.parse("2026-01-01T00:00:00Z");
 
@@ -65,12 +65,12 @@ public class RunLaunchService {
     private final int maxDispatchAttempts;
 
     public RunLaunchService(RunLogic runLogic, DatasetLogic datasetLogic,
-            TargetLogic targetLogic, TaskLogic taskLogic, BjsJobDispatcher dispatcher,
-            EvaluatorSelection evaluatorSelection,
-            @Value("${agentgate.scheduling.max-concurrent-per-api-key:10}")
-            int maxConcurrentPerApiKey,
-            @Value("${agentgate.scheduling.max-dispatch-attempts:10}")
-            int maxDispatchAttempts) {
+                            TargetLogic targetLogic, TaskLogic taskLogic, BjsJobDispatcher dispatcher,
+                            EvaluatorSelection evaluatorSelection,
+                            @Value("${agentgate.scheduling.max-concurrent-per-api-key:10}")
+                            int maxConcurrentPerApiKey,
+                            @Value("${agentgate.scheduling.max-dispatch-attempts:10}")
+                            int maxDispatchAttempts) {
         this.runLogic = runLogic;
         this.datasetLogic = datasetLogic;
         this.targetLogic = targetLogic;
@@ -84,29 +84,29 @@ public class RunLaunchService {
     /**
      * 创建并按需派发一个 demo Run.
      *
-     * @param version demo 目标版本
-     * @param datasetId 数据集 id
-     * @param datasetVersion 数据集版本(可空,默认最新发布)
-     * @param caseIds 用例 id(可空)
-     * @param evaluatorIds 评测器 id(可空,默认内置全套)
-     * @param timeoutSeconds 超时秒
+     * @param version          demo 目标版本
+     * @param datasetId        数据集 id
+     * @param datasetVersion   数据集版本(可空,默认最新发布)
+     * @param caseIds          用例 id(可空)
+     * @param evaluatorIds     评测器 id(可空,默认内置全套)
+     * @param timeoutSeconds   超时秒
      * @param maxParallelCases 并行度
-     * @param maxRetries 重试上限
-     * @param scheduledFor 计划时间(可空)
-     * @param apiKey API Key(可空)
+     * @param maxRetries       重试上限
+     * @param scheduledFor     计划时间(可空)
+     * @param apiKey           API Key(可空)
      * @return Run
      */
     public EvaluationRun submitDemoRun(String version, String datasetId,
-            Integer datasetVersion, List<String> caseIds, List<String> evaluatorIds,
-            double timeoutSeconds, int maxParallelCases, int maxRetries,
-            OffsetDateTime scheduledFor, String apiKey) {
+                                       Integer datasetVersion, List<String> caseIds, List<String> evaluatorIds,
+                                       double timeoutSeconds, int maxParallelCases, int maxRetries,
+                                       OffsetDateTime scheduledFor, String apiKey) {
         EvaluationRun run = createRun(resolveDemoTarget(version), datasetId, datasetVersion,
                 caseIds, evaluatorIds, null, timeoutSeconds, maxParallelCases, maxRetries,
                 scheduledFor, apiKey);
         taskLogic.saveTaskRuns(
-                com.abchina.llmalf.agentgate.domain.model.evaluationtask.EvaluationTask.of(
+                EvaluationTask.of(
                         run.id(),
-                        com.abchina.llmalf.agentgate.domain.model.evaluationtask.EvaluationTaskKind.SINGLE,
+                        EvaluationTaskKind.SINGLE,
                         null, Collections.singletonList(run.id()), null, null, null),
                 Collections.singletonList(run));
         if (run.status() == RunStatus.SCHEDULED) {
@@ -182,15 +182,15 @@ public class RunLaunchService {
     /**
      * 创建 A/B 对照两个 Run.
      *
-     * @param baselineVersion 基线目标版本
+     * @param baselineVersion  基线目标版本
      * @param candidateVersion 候选目标版本
-     * @param datasetId 数据集 id
-     * @param datasetVersion 数据集版本
-     * @param evaluatorRefs 评测器引用(可空)
+     * @param datasetId        数据集 id
+     * @param datasetVersion   数据集版本
+     * @param evaluatorRefs    评测器引用(可空)
      * @return 两个 Run(baseline/candidate)
      */
     public EvaluationRun[] submitAbRuns(String baselineVersion, String candidateVersion,
-            String datasetId, Integer datasetVersion, List<EvaluatorRef> evaluatorRefs) {
+                                        String datasetId, Integer datasetVersion, List<EvaluatorRef> evaluatorRefs) {
         TargetSnapshot baselineTarget = resolveDemoTarget(baselineVersion);
         TargetSnapshot candidateTarget = resolveDemoTarget(candidateVersion);
         validateVariants(baselineTarget, candidateTarget);
@@ -199,12 +199,12 @@ public class RunLaunchService {
         EvaluationRun candidate = createRun(candidateTarget, datasetId,
                 datasetVersion, null, null, evaluatorRefs, 300, 1, 0, null, null);
         taskLogic.saveTaskRuns(
-                com.abchina.llmalf.agentgate.domain.model.evaluationtask.EvaluationTask.of(
+                EvaluationTask.of(
                         baseline.id(),
-                        com.abchina.llmalf.agentgate.domain.model.evaluationtask.EvaluationTaskKind.AB,
+                        EvaluationTaskKind.AB,
                         null, Arrays.asList(baseline.id(), candidate.id()), null, null, null),
                 Arrays.asList(baseline, candidate));
-        return new EvaluationRun[] {dispatchAndReload(baseline), dispatchAndReload(candidate)};
+        return new EvaluationRun[]{dispatchAndReload(baseline), dispatchAndReload(candidate)};
     }
 
     /**
@@ -218,7 +218,7 @@ public class RunLaunchService {
         boolean sameIdentity = baseline.ref().sourceId()
                 .equals(candidate.ref().sourceId())
                 && baseline.ref().externalTargetId()
-                        .equals(candidate.ref().externalTargetId());
+                .equals(candidate.ref().externalTargetId());
         if (!sameIdentity) {
             throw new AgentException(422,
                     "A/B variants must reference the same logical Agent");
@@ -254,23 +254,23 @@ public class RunLaunchService {
      *
      * <p>对齐 Python submit_stability_runs:单 Run 派发失败保留整组(吞 503 继续)。</p>
      *
-     * @param version 目标版本
-     * @param repetitions 重复次数(2-20)
-     * @param datasetId 数据集 id
-     * @param datasetVersion 数据集版本
-     * @param caseIds 用例 id(可空)
-     * @param evaluatorIds 评测器 id(可空)
-     * @param timeoutSeconds 超时秒
+     * @param version          目标版本
+     * @param repetitions      重复次数(2-20)
+     * @param datasetId        数据集 id
+     * @param datasetVersion   数据集版本
+     * @param caseIds          用例 id(可空)
+     * @param evaluatorIds     评测器 id(可空)
+     * @param timeoutSeconds   超时秒
      * @param maxParallelCases 并行度
-     * @param maxRetries 重试上限
-     * @param apiKey API Key
+     * @param maxRetries       重试上限
+     * @param apiKey           API Key
      * @return 稳定性任务
      */
-    public com.abchina.llmalf.agentgate.domain.model.evaluationtask.EvaluationTask
-            submitStabilityRuns(String version, int repetitions,
-            String datasetId, Integer datasetVersion, List<String> caseIds,
-            List<String> evaluatorIds, double timeoutSeconds, int maxParallelCases,
-            int maxRetries, String apiKey) {
+    public EvaluationTask
+    submitStabilityRuns(String version, int repetitions,
+                        String datasetId, Integer datasetVersion, List<String> caseIds,
+                        List<String> evaluatorIds, double timeoutSeconds, int maxParallelCases,
+                        int maxRetries, String apiKey) {
         EvaluationRun template = createRun(resolveDemoTarget(version), datasetId,
                 datasetVersion, caseIds, evaluatorIds, null, timeoutSeconds,
                 maxParallelCases, maxRetries, null, apiKey);
@@ -282,7 +282,7 @@ public class RunLaunchService {
         UserContext context = UserContextHolder.current();
         for (int index = 1; index < repetitions; index++) {
             EvaluationRun copy = EvaluationRun.of(
-                    java.util.UUID.randomUUID().toString(), template.manifest(),
+                    UUID.randomUUID().toString(), template.manifest(),
                     RunLifecycle.of(RunStatus.PENDING, DomainValidations.utcNow(),
                             null, null, null, null),
                     context.userTeamId(), context.userId(), context.userName(),
@@ -293,10 +293,10 @@ public class RunLaunchService {
         for (EvaluationRun run : runs) {
             runIds.add(run.id());
         }
-        com.abchina.llmalf.agentgate.domain.model.evaluationtask.EvaluationTask task =
-                com.abchina.llmalf.agentgate.domain.model.evaluationtask.EvaluationTask.of(
+        EvaluationTask task =
+                EvaluationTask.of(
                         template.id(),
-                        com.abchina.llmalf.agentgate.domain.model.evaluationtask.EvaluationTaskKind.STABILITY,
+                        EvaluationTaskKind.STABILITY,
                         null, runIds, null, null, null);
         taskLogic.saveTaskRuns(task, runs);
         for (EvaluationRun run : runs) {
@@ -325,6 +325,48 @@ public class RunLaunchService {
             throw new AgentException(422, "only a pending EvaluationRun can be dispatched");
         }
         return dispatchPersisted(run);
+    }
+
+    /**
+     * 以终态源 Run 的原始清单创建并派发一个新 Run.
+     *
+     * <p>新 Run 与单次任务先原子落库,再调用外部派发器。源 Run 的清单和
+     * 用户归属保持不变,生命周期和执行产物不继承。</p>
+     *
+     * @param sourceRunId 源 Run id
+     * @return 派发后的新 Run(PENDING 或 WAITING)
+     */
+    public EvaluationRun rerunRun(String sourceRunId) {
+        String currentTeamId = UserContextHolder.current().userTeamId();
+        EvaluationRun source = runLogic.getRun(sourceRunId, currentTeamId);
+        if (source == null) {
+            throw new AgentException(404, "unknown EvaluationRun: " + sourceRunId);
+        }
+        if (source.status() == RunStatus.SCHEDULED
+                || source.status() == RunStatus.PENDING
+                || source.status() == RunStatus.WAITING
+                || source.status() == RunStatus.RUNNING) {
+            throw new AgentException(409,
+                    "cannot rerun " + source.status().wireValue() + " EvaluationRun");
+        }
+
+        String rerunId = UUID.randomUUID().toString();
+        EvaluationRun rerun = EvaluationRun.of(rerunId, source.manifest(),
+                RunLifecycle.of(RunStatus.PENDING, DomainValidations.utcNow(),
+                        null, null, null, null),
+                source.userTeamId(), source.userId(), source.userName(),
+                source.apiKey(), 0);
+        taskLogic.saveTaskRuns(
+                EvaluationTask.of(
+                        rerunId,
+                        EvaluationTaskKind.SINGLE,
+                        null, Collections.singletonList(rerunId), null, null, null),
+                Collections.singletonList(rerun));
+        try {
+            return dispatchRun(rerunId);
+        } catch (IllegalStateException e) {
+            throw new AgentException(503, "Evaluation dispatch service is unavailable");
+        }
     }
 
     /**
@@ -373,10 +415,10 @@ public class RunLaunchService {
     }
 
     private EvaluationRun createRun(TargetSnapshot target, String datasetId,
-            Integer datasetVersion, List<String> caseIds, List<String> evaluatorIds,
-            List<EvaluatorRef> evaluatorRefs, double timeoutSeconds,
-            int maxParallelCases, int maxRetries, OffsetDateTime scheduledFor,
-            String apiKey) {
+                                    Integer datasetVersion, List<String> caseIds, List<String> evaluatorIds,
+                                    List<EvaluatorRef> evaluatorRefs, double timeoutSeconds,
+                                    int maxParallelCases, int maxRetries, OffsetDateTime scheduledFor,
+                                    String apiKey) {
         DatasetVersion dataset = datasetVersion != null
                 ? requirePublishedVersion(datasetId, datasetVersion)
                 : latestPublishedVersion(datasetId);
@@ -391,12 +433,12 @@ public class RunLaunchService {
         UserContext context = UserContextHolder.current();
         OffsetDateTime scheduled = scheduledFor == null ? null
                 : DomainValidations.normalizeUtc(scheduledFor,
-                        "EvaluationRun scheduled_for");
+                "EvaluationRun scheduled_for");
         RunManifest manifest = RunManifest.of(dataset, caseIds, target, selected,
                 primaryIds(selected), MetricPlan.of(), ReleaseGateSpec.of(), timeoutSeconds,
                 maxRetries, maxParallelCases, null, "");
         RunStatus status = scheduled != null ? RunStatus.SCHEDULED : RunStatus.PENDING;
-        EvaluationRun run = EvaluationRun.of(java.util.UUID.randomUUID().toString(),
+        EvaluationRun run = EvaluationRun.of(UUID.randomUUID().toString(),
                 manifest,
                 RunLifecycle.of(status, DomainValidations.utcNow(), scheduled, null, null,
                         null),
@@ -450,7 +492,7 @@ public class RunLaunchService {
         }
         TargetRef ref = TargetRef.of("agentgate-demo", TargetType.AGENT,
                 "loan-agent", version);
-        com.abchina.llmalf.agentgate.domain.model.target.TargetDescriptor descriptor =
+        TargetDescriptor descriptor =
                 targetLogic.getTargetDescriptor(
                         DemoCatalog.descriptor(version).contentSha256());
         if (descriptor == null) {

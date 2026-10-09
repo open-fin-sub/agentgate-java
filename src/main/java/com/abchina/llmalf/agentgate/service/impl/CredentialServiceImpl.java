@@ -1,10 +1,10 @@
 package com.abchina.llmalf.agentgate.service.impl;
 
 import com.abchina.llmalf.agentgate.common.AgentException;
-import com.abchina.llmalf.agentgate.logic.ApiKeyEncryptor;
-import com.abchina.llmalf.agentgate.logic.ApiKeyLogic;
 import com.abchina.llmalf.agentgate.domain.model.credential.ApiKeyMetadata;
 import com.abchina.llmalf.agentgate.domain.model.credential.ApiKeyScope;
+import com.abchina.llmalf.agentgate.logic.ApiKeyEncryptor;
+import com.abchina.llmalf.agentgate.logic.ApiKeyLogic;
 import com.abchina.llmalf.agentgate.service.ICredentialService;
 import com.abchina.llmalf.agentgate.service.vo.ApiKeyVO;
 import org.springframework.beans.factory.ObjectProvider;
@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * API Key 管理服务实现.
@@ -42,7 +43,7 @@ public class CredentialServiceImpl implements ICredentialService {
     public ApiKeyVO createApiKey(String name, String providerId, String scope, String plaintext) {
         ApiKeyEncryptor encryptor = requireEncryptor();
         try {
-            ApiKeyMetadata metadata = ApiKeyMetadata.of(java.util.UUID.randomUUID().toString(),
+            ApiKeyMetadata metadata = ApiKeyMetadata.of(UUID.randomUUID().toString(),
                     name.trim(), providerId.trim(), ApiKeyScope.fromWireValue(scope), null, null);
             String encrypted = encryptor.encrypt(plaintext);
             apiKeyLogic.saveApiKey(metadata, encrypted);

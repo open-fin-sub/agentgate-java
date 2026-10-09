@@ -7,6 +7,8 @@ import com.abchina.llmalf.agentgate.domain.model.evaluator.EvaluatorDraft;
 import com.abchina.llmalf.agentgate.domain.model.evaluator.EvaluatorSpec;
 import com.abchina.llmalf.agentgate.service.impl.EvaluatorServiceImpl;
 import com.abchina.llmalf.agentgate.service.vo.DraftDefinitionRequest;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -281,10 +283,10 @@ public class EvaluatorController {
         return summary;
     }
 
-    private static final com.fasterxml.jackson.databind.ObjectMapper SNAKE_MAPPER =
-            new com.fasterxml.jackson.databind.ObjectMapper()
+    private static final ObjectMapper SNAKE_MAPPER =
+            new ObjectMapper()
                     .setPropertyNamingStrategy(
-                            com.fasterxml.jackson.databind.PropertyNamingStrategy.SNAKE_CASE);
+                            PropertyNamingStrategy.SNAKE_CASE);
 
     private static DraftDefinitionRequest definitionOf(Map<String, Object> body) {
         return SNAKE_MAPPER.convertValue(

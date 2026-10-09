@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "description": "Python AgentGate 79-endpoint inventory captured on 2026-10-08",
+  "default_variables": {
+    "user_team_id": "",
+    "user_id": "api-parity",
+    "user_name": "API Parity"
+  },
+  "default_headers": {
+    "user_team_id": "${user_team_id}",
+    "user_id": "${user_id}",
+    "user_name": "${user_name}"
+  },
+  "cases": [
+    {"id":"agent-platform-submit","method":"POST","path":"/api/agent-platform/evaluations","body_variable":"agent_platform_evaluation_body","extract":{"run_id":"/data/id"},"normalizers":["uuid","timestamp"]},
+    {"id":"health","method":"GET","path":"/health","default":true},
+    {"id":"bank-targets-list","method":"GET","path":"/api/bank-targets","default":true},
+    {"id":"bank-evaluation-submit","method":"POST","path":"/api/bank-evaluations","body_variable":"bank_evaluation_body","extract":{"run_id":"/data/id"},"normalizers":["uuid","timestamp"]},
+    {"id":"run-target-descriptor","method":"GET","path":"/api/runs/${run_id}/target-descriptor"},
+    {"id":"model-runtime","method":"GET","path":"/api/model-runtime","default":true},
+
+    {"id":"stability-create","method":"POST","path":"/api/stability-experiments","body_variable":"stability_body","normalizers":["uuid","timestamp"]},
+    {"id":"stability-list","method":"GET","path":"/api/stability-experiments","default":true,"normalizers":["timestamp"]},
+    {"id":"stability-get","method":"GET","path":"/api/stability-experiments/${task_id}","normalizers":["timestamp"]},
+
+    {"id":"dataset-import-json","method":"POST","path":"/api/datasets/import","raw_body_variable":"dataset_import_body_base64","content_type_variable":"dataset_import_content_type","normalizers":["uuid","timestamp"]},
+    {"id":"dataset-import-xlsx","method":"POST","path":"/api/datasets/import/xlsx","raw_body_variable":"dataset_xlsx_body_base64","content_type_variable":"dataset_xlsx_content_type","normalizers":["uuid","timestamp"]},
+    {"id":"dataset-list","method":"GET","path":"/api/datasets","default":true,"normalizers":["timestamp"]},
+    {"id":"dataset-create","method":"POST","path":"/api/datasets","body_variable":"dataset_create_body","extract":{"dataset_id":"/data/dataset/id"},"normalizers":["uuid","timestamp","sha256"]},
+    {"id":"dataset-get","method":"GET","path":"/api/datasets/${dataset_id}","normalizers":["uuid","timestamp","sha256"]},
+    {"id":"dataset-patch","method":"PATCH","path":"/api/datasets/${dataset_id}","body_variable":"dataset_patch_body","normalizers":["uuid","timestamp"]},
+    {"id":"dataset-copy","method":"POST","path":"/api/datasets/${dataset_id}/copy","body_variable":"dataset_copy_body","extract":{"copied_dataset_id":"/data/id"},"normalizers":["uuid","timestamp"]},
+    {"id":"dataset-versions","method":"GET","path":"/api/datasets/${dataset_id}/versions","normalizers":["timestamp"]},
+    {"id":"dataset-version-get","method":"GET","path":"/api/datasets/${dataset_id}/versions/${dataset_version}","normalizers":["timestamp"]},
+    {"id":"dataset-export-json","method":"GET","path":"/api/datasets/${dataset_id}/versions/${dataset_version}/export"},
+    {"id":"dataset-export-xlsx","method":"GET","path":"/api/datasets/${dataset_id}/versions/${dataset_version}/export/xlsx"},
+    {"id":"dataset-draft-get","method":"GET","path":"/api/datasets/${dataset_id}/drafts/current","normalizers":["timestamp"]},
+    {"id":"dataset-draft-create","method":"POST","path":"/api/datasets/${dataset_id}/drafts","body_variable":"dataset_draft_body","normalizers":["uuid","timestamp"]},
+    {"id":"dataset-case-create","method":"POST","path":"/api/datasets/${dataset_id}/drafts/cases","body_variable":"dataset_case_body","extract":{"case_id":"/data/id"},"normalizers":["uuid","timestamp"]},
+    {"id":"dataset-case-update","method":"PUT","path":"/api/datasets/${dataset_id}/drafts/cases/${case_id}","body_variable":"dataset_case_body","normalizers":["timestamp"]},
+    {"id":"dataset-case-copy","method":"POST","path":"/api/datasets/${dataset_id}/drafts/cases/${case_id}/copy","extract":{"copied_case_id":"/data/id"},"normalizers":["uuid","timestamp"]},
+    {"id":"dataset-case-order","method":"PUT","path":"/api/datasets/${dataset_id}/drafts/case-order","body_variable":"dataset_case_order_body","normalizers":["timestamp"]},
+    {"id":"dataset-case-delete","method":"DELETE","path":"/api/datasets/${dataset_id}/drafts/cases/${case_id}"},
+    {"id":"dataset-draft-publish","method":"POST","path":"/api/datasets/${dataset_id}/drafts/publish","normalizers":["timestamp"]},
+    {"id":"dataset-draft-delete","method":"DELETE","path":"/api/datasets/${dataset_draft_delete_id}/drafts/current"},
+    {"id":"dataset-delete","method":"DELETE","path":"/api/datasets/${dataset_id}","normalizers":["uuid","timestamp"]},
+
+    {"id":"catalog-versions","method":"GET","path":"/api/versions","default":true},
+
+    {"id":"api-key-create","method":"POST","path":"/api/api-keys","body_variable":"api_key_create_body","extract":{"api_key_id":"/data/id"},"normalizers":["uuid","timestamp"]},
+    {"id":"api-key-list","method":"GET","path":"/api/api-keys","default":true,"normalizers":["timestamp"]},
+    {"id":"api-key-get","method":"GET","path":"/api/api-keys/${api_key_id}","normalizers":["timestamp"]},
+    {"id":"api-key-delete","method":"DELETE","path":"/api/api-keys/${api_key_id}"},
+
+    {"id":"evaluator-list","method":"GET","path":"/api/evaluators","default":true,"normalizers":["timestamp"]},
+    {"id":"evaluator-create","method":"POST","path":"/api/evaluators","body_variable":"evaluator_create_body","extract":{"evaluator_id":"/data/id"},"normalizers":["uuid","timestamp"]},
+    {"id":"evaluator-get","method":"GET","path":"/api/evaluators/${evaluator_id}","normalizers":["timestamp"]},
+    {"id":"evaluator-patch","method":"PATCH","path":"/api/evaluators/${evaluator_id}","body_variable":"evaluator_patch_body","normalizers":["timestamp"]},
+    {"id":"evaluator-versions","method":"GET","path":"/api/evaluators/${evaluator_id}/versions","normalizers":["timestamp"]},
+    {"id":"evaluator-version-get","method":"GET","path":"/api/evaluators/${evaluator_id}/versions/${evaluator_version}","normalizers":["timestamp"]},
+    {"id":"evaluator-draft-get","method":"GET","path":"/api/evaluators/${evaluator_id}/drafts/current","normalizers":["timestamp"]},
+    {"id":"evaluator-draft-create","method":"POST","path":"/api/evaluators/${evaluator_id}/drafts","body_variable":"evaluator_draft_body","normalizers":["uuid","timestamp"]},
+    {"id":"evaluator-draft-update","method":"PUT","path":"/api/evaluators/${evaluator_id}/drafts/current","body_variable":"evaluator_draft_body","normalizers":["timestamp"]},
+    {"id":"evaluator-draft-publish","method":"POST","path":"/api/evaluators/${evaluator_id}/drafts/publish","normalizers":["timestamp"]},
+    {"id":"evaluator-draft-delete","method":"DELETE","path":"/api/evaluators/${evaluator_draft_delete_id}/drafts/current"},
+    {"id":"evaluator-delete","method":"DELETE","path":"/api/evaluators/${evaluator_id}"},
+
+    {"id":"evaluation-task-list","method":"GET","path":"/api/evaluation-tasks","default":true,"normalizers":["timestamp"]},
+    {"id":"evaluation-task-get","method":"GET","path":"/api/evaluation-tasks/${task_id}","normalizers":["timestamp"]},
+    {"id":"evaluation-task-update","method":"PUT","path":"/api/evaluation-tasks/${task_id}","body_variable":"evaluation_task_body","normalizers":["timestamp"]},
+
+    {"id":"run-list","method":"GET","path":"/api/runs","default":true,"normalizers":["timestamp"]},
+    {"id":"run-activity","method":"GET","path":"/api/runs/activity","default":true,"normalizers":["timestamp"]},
+    {"id":"evaluation-submit","method":"POST","path":"/api/evaluations","body_variable":"evaluation_body","extract":{"run_id":"/data/id"},"normalizers":["uuid","timestamp"]},
+    {"id":"skill-analysis-submit","method":"POST","path":"/api/evaluations/skill-analysis","body_variable":"skill_analysis_evaluation_body","normalizers":["uuid","timestamp"]},
+    {"id":"run-status","method":"GET","path":"/api/runs/${run_id}/status","normalizers":["timestamp"]},
+    {"id":"run-cancel","method":"POST","path":"/api/runs/${run_id}/cancel","normalizers":["timestamp"]},
+    {"id":"run-rerun","method":"POST","path":"/api/runs/${run_id}/rerun","extract":{"rerun_id":"/data/id"},"normalizers":["uuid","timestamp"]},
+    {"id":"run-manifest","method":"GET","path":"/api/runs/${run_id}/manifest","normalizers":["timestamp"]},
+
+    {"id":"result-overview","method":"GET","path":"/api/overview","default":true,"normalizers":["timestamp"]},
+    {"id":"result-run","method":"GET","path":"/api/runs/${run_id}","normalizers":["timestamp"]},
+    {"id":"result-analytics","method":"GET","path":"/api/runs/${run_id}/analytics","normalizers":["timestamp"]},
+    {"id":"result-samples","method":"GET","path":"/api/runs/${run_id}/samples","normalizers":["timestamp"]},
+    {"id":"result-trace","method":"GET","path":"/api/runs/${run_id}/traces/${case_id}","normalizers":["timestamp"]},
+    {"id":"result-case","method":"GET","path":"/api/runs/${run_id}/cases/${case_id}","normalizers":["timestamp"]},
+    {"id":"result-writeback","method":"POST","path":"/api/runs/${run_id}/cases/${case_id}/writeback","body_variable":"writeback_body","normalizers":["timestamp"]},
+
+    {"id":"run-comparison-submit","method":"POST","path":"/api/run-comparisons","body_variable":"run_comparison_body","normalizers":["uuid","timestamp"]},
+    {"id":"run-comparison-get","method":"GET","path":"/api/run-comparisons?baseline_run_id=${baseline_run_id}&candidate_run_id=${candidate_run_id}","normalizers":["timestamp"]},
+
+    {"id":"lineage-run","method":"GET","path":"/api/runs/${run_id}/lineage"},
+    {"id":"lineage-dataset","method":"GET","path":"/api/datasets/${dataset_id}/versions/${dataset_version}/lineage"},
+    {"id":"lineage-case","method":"GET","path":"/api/datasets/${dataset_id}/versions/${dataset_version}/cases/${case_id}/lineage"},
+    {"id":"lineage-target","method":"GET","path":"/api/targets/${source_id}/${target_type}/${target_id}/versions/${target_version}/lineage"},
+    {"id":"lineage-skill","method":"GET","path":"/api/skills/${source_id}/${skill_id}/versions/${skill_version}/lineage"},
+    {"id":"lineage-evaluator","method":"GET","path":"/api/evaluators/${evaluator_id}/versions/${evaluator_version}/lineage"},
+
+    {"id":"skill-report-create","method":"POST","path":"/api/skill-analysis/reports","body_variable":"skill_report_body","extract":{"report_id":"/data/id"},"normalizers":["uuid","timestamp"]},
+    {"id":"skill-report-list","method":"GET","path":"/api/skill-analysis/reports","default":true,"normalizers":["timestamp"]},
+    {"id":"skill-report-get","method":"GET","path":"/api/skill-analysis/reports/${report_id}","normalizers":["timestamp"]},
+    {"id":"skill-report-review","method":"PUT","path":"/api/skill-analysis/reports/${report_id}/findings/${finding_id}/review","body_variable":"skill_review_body","normalizers":["timestamp"]},
+    {"id":"optimization-report","method":"GET","path":"/api/runs/${run_id}/optimization","normalizers":["timestamp"]},
+    {"id":"telemetry-traces","method":"POST","path":"/v1/traces","body_variable":"otlp_traces_body","normalizers":["timestamp"]}
+  ]
+}

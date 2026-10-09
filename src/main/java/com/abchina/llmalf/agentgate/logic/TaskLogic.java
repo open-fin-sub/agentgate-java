@@ -20,7 +20,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 评测任务域存储编排.
@@ -100,7 +103,7 @@ public class TaskLogic {
     public EvaluationTask saveTask(EvaluationTask task) {
         try {
             List<String> sortedRunIds = new ArrayList<>(task.runIds());
-            java.util.Collections.sort(sortedRunIds);
+            Collections.sort(sortedRunIds);
             for (String runId : sortedRunIds) {
                 RunEntity runEntity = runDAO.selectByIdForUpdate(IdentityDigest.of(runId));
                 if (runEntity == null) {
@@ -119,7 +122,7 @@ public class TaskLogic {
                             "task identity and run associations are immutable");
                 }
             }
-            java.util.Map<String, String> reports = new java.util.LinkedHashMap<>();
+            Map<String, String> reports = new LinkedHashMap<>();
             List<String> reportIds = new ArrayList<>();
             if (previous != null) {
                 reportIds.addAll(previous.staticReportIds());

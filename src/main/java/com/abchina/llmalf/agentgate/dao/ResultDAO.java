@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 /**
  * 评测结论 DAO (MyBatis-Plus Mapper).
  *
@@ -19,7 +21,7 @@ public interface ResultDAO extends BaseMapper<ResultEntity> {
      * @param runKey 参数
      * @return 实体列表
      */
-    java.util.List<ResultEntity> selectByRunKey(@Param("runKey") byte[] runKey);
+    List<ResultEntity> selectByRunKey(@Param("runKey") byte[] runKey);
 
 
     /**

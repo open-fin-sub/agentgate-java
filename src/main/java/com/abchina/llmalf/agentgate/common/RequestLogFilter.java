@@ -12,12 +12,15 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
- * POST 请求日志过滤器.
+ * API 请求日志过滤器.
  *
- * <p>语义对齐 Python RequestLogMiddleware:记录方法/路径/user_id/IP,
- * /v1/traces 跳过;不记录任何凭据值.</p>
+ * <p>记录调用前后的方法、路径、参数名、内容长度、状态与耗时。
+ * /v1/traces 为高频上报路径继续跳过;不记录查询值、请求体或凭据.</p>
  */
 @Slf4j
 @Component
@@ -34,14 +37,46 @@ public class RequestLogFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
         String path = PATH_HELPER.getPathWithinApplication(request);
-        if ("POST".equals(request.getMethod()) && !SKIP_PATH.equals(path)) {
-            String userId = request.getHeader("user_id");
-            log.info("API request: {} {} user_id={} ip={}",
-                    request.getMethod(),
-                    path,
-                    (userId == null || userId.isEmpty()) ? "anonymous" : userId,
-                    request.getRemoteAddr());
+        if (SKIP_PATH.equals(path)) {
+            chain.doFilter(request, response);
+            return;
         }
-        chain.doFilter(request, response);
+        String method = request.getMethod();
+        String userId = safeHeader(request.getHeader("user_id"), "anonymous");
+        String teamId = safeHeader(request.getHeader("user_team_id"), "");
+        String parameterNames = safeParameterNames(request);
+        long startedAt = System.nanoTime();
+        log.info("API request started: method={} path={} parameter_names={} content_length={} "
+                        + "user_id={} user_team_id={} ip={}",
+                method, path, parameterNames, request.getContentLengthLong(), userId, teamId,
+                request.getRemoteAddr());
+        try {
+            chain.doFilter(request, response);
+        } finally {
+            long elapsedMillis = (System.nanoTime() - startedAt) / 1_000_000L;
+            log.info("API request completed: method={} path={} status={} elapsed_ms={}",
+                    method, path, response.getStatus(), elapsedMillis);
+        }
+    }
+
+    private static String safeParameterNames(HttpServletRequest request) {
+        List<String> names = new ArrayList<>();
+        for (String name : request.getParameterMap().keySet()) {
+            names.add(safeLogValue(name, ""));
+        }
+        Collections.sort(names);
+        return names.toString();
+    }
+
+    private static String safeHeader(String value, String defaultValue) {
+        return value == null || value.isEmpty() ? defaultValue : safeLogValue(value, defaultValue);
+    }
+
+    private static String safeLogValue(String value, String defaultValue) {
+        if (value == null) {
+            return defaultValue;
+        }
+        String sanitized = value.replace('\r', '_').replace('\n', '_');
+        return sanitized.length() <= 128 ? sanitized : sanitized.substring(0, 128);
     }
 }

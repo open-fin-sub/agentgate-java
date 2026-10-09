@@ -1,6 +1,7 @@
 package com.abchina.llmalf.agentgate.domain.model.report;
 
 import com.abchina.llmalf.agentgate.domain.PayloadValues;
+import com.abchina.llmalf.agentgate.domain.model.cases.Case;
 import com.abchina.llmalf.agentgate.domain.model.evaluator.EvaluatorSeverity;
 import com.abchina.llmalf.agentgate.domain.model.evaluator.EvaluatorSpec;
 import com.abchina.llmalf.agentgate.domain.model.gate.ReleaseGateDecision;
@@ -8,10 +9,11 @@ import com.abchina.llmalf.agentgate.domain.model.metric.MetricSummary;
 import com.abchina.llmalf.agentgate.domain.model.result.EvaluationResult;
 import com.abchina.llmalf.agentgate.domain.model.result.Outcome;
 import com.abchina.llmalf.agentgate.domain.model.run.EvaluationRun;
+import com.abchina.llmalf.agentgate.domain.model.run.RunManifest;
 import com.abchina.llmalf.agentgate.domain.model.run.RunStatus;
-import com.abchina.llmalf.agentgate.domain.model.cases.Case;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -245,7 +247,7 @@ public final class EvaluationReport {
     }
 
     private static void validateReleaseGate(
-            com.abchina.llmalf.agentgate.domain.model.run.RunManifest manifest,
+            RunManifest manifest,
             List<EvaluationResult> primary, MetricSummary overall, List<String[]> missing,
             ReleaseGateDecision decision) {
         if (!equalsNullable(decision.score(), overall.score())) {
@@ -290,7 +292,7 @@ public final class EvaluationReport {
             return false;
         }
         for (int i = 0; i < left.size(); i++) {
-            if (!java.util.Arrays.equals(left.get(i), right.get(i))) {
+            if (!Arrays.equals(left.get(i), right.get(i))) {
                 return false;
             }
         }

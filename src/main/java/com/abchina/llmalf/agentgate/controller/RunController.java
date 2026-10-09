@@ -1,30 +1,36 @@
 package com.abchina.llmalf.agentgate.controller;
 
 import com.abchina.llmalf.agentgate.common.AgentException;
-import com.abchina.llmalf.agentgate.common.PydanticErrors;
 import com.abchina.llmalf.agentgate.common.ApiErrors;
-import com.abchina.llmalf.agentgate.common.UserContextHolder;
+import com.abchina.llmalf.agentgate.common.PydanticErrors;
 import com.abchina.llmalf.agentgate.common.ResponseBase;
+import com.abchina.llmalf.agentgate.domain.model.evaluator.EvaluatorRef;
 import com.abchina.llmalf.agentgate.domain.model.run.EvaluationRun;
 import com.abchina.llmalf.agentgate.domain.model.run.RunStatus;
+import com.abchina.llmalf.agentgate.service.impl.RunLaunchService;
 import com.abchina.llmalf.agentgate.service.impl.RunReaderService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Run 读取端点.
@@ -36,21 +42,15 @@ import java.util.Map;
 public class RunController {
 
     private final RunReaderService runReaderService;
-    private final com.abchina.llmalf.agentgate.service.impl.RunLaunchService runLaunchService;
-    private final com.abchina.llmalf.agentgate.logic.RunLogic runLogicProxy;
-    private final com.abchina.llmalf.agentgate.logic.TaskLogic taskLogicProxy;
+    private final RunLaunchService runLaunchService;
     private final long staleGraceSeconds;
 
     public RunController(RunReaderService runReaderService,
-            com.abchina.llmalf.agentgate.service.impl.RunLaunchService runLaunchService,
-            com.abchina.llmalf.agentgate.logic.RunLogic runLogicProxy,
-            com.abchina.llmalf.agentgate.logic.TaskLogic taskLogicProxy,
-            @org.springframework.beans.factory.annotation.Value(
+            RunLaunchService runLaunchService,
+            @Value(
                     "${agentgate.scheduling.stale-grace-seconds:30}") long staleGraceSeconds) {
         this.runReaderService = runReaderService;
         this.runLaunchService = runLaunchService;
-        this.runLogicProxy = runLogicProxy;
-        this.taskLogicProxy = taskLogicProxy;
         this.staleGraceSeconds = staleGraceSeconds;
     }
 
@@ -74,7 +74,7 @@ public class RunController {
                 errors.custom("enum", "query", "status",
                         "Input should be 'scheduled', 'pending', 'waiting', 'running', "
                                 + "'completed', 'failed' or 'cancelled'",
-                        status, java.util.Collections.singletonMap("expected",
+                        status, Collections.singletonMap("expected",
                                 "'scheduled', 'pending', 'waiting', 'running', "
                                         + "'completed', 'failed' or 'cancelled'"));
             }
@@ -158,7 +158,7 @@ public class RunController {
      * @param request 启动请求
      * @return Run 进度投影
      */
-    @org.springframework.web.bind.annotation.PostMapping("/api/evaluations")
+    @PostMapping("/api/evaluations")
     public ResponseEntity<ResponseBase<Map<String, Object>>> launchEvaluation(
             @RequestBody Map<String, Object> request) {
         PydanticErrors errors = new PydanticErrors();
@@ -200,7 +200,7 @@ public class RunController {
             }
         }
         errors.throwIfAny();
-        com.abchina.llmalf.agentgate.domain.model.run.EvaluationRun run;
+        EvaluationRun run;
         try {
             run = runLaunchService.submitDemoRun(
                     version,
@@ -231,7 +231,7 @@ public class RunController {
      * @param request 请求体
      * @return 503
      */
-    @org.springframework.web.bind.annotation.PostMapping("/api/evaluations/skill-analysis")
+    @PostMapping("/api/evaluations/skill-analysis")
     public ResponseEntity<ResponseBase<Object>> analyzeEvaluationTarget(
             @RequestBody Map<String, Object> request) {
         throw new AgentException(503, "Skill analysis is unavailable");
@@ -243,7 +243,7 @@ public class RunController {
      * @param request 对照请求
      * @return 双 Run 变体
      */
-    @org.springframework.web.bind.annotation.PostMapping("/api/run-comparisons")
+    @PostMapping("/api/run-comparisons")
     public ResponseEntity<ResponseBase<Map<String, Object>>> launchRunComparison(
             @RequestBody Map<String, Object> request) {
         PydanticErrors errors = new PydanticErrors();
@@ -259,7 +259,7 @@ public class RunController {
             errors.greaterEqual("body", "dataset_version",
                     request.get("dataset_version"), 1);
         }
-        List<com.abchina.llmalf.agentgate.domain.model.evaluator.EvaluatorRef> refs = null;
+        List<EvaluatorRef> refs = null;
         Object rawRefs = request.get("evaluators");
         if (rawRefs instanceof List) {
             refs = new ArrayList<>();
@@ -278,7 +278,7 @@ public class RunController {
                 String id = requireNonBlankString(errors, ref, "id");
                 String evalVersion = requireNonBlankString(errors, ref, "version");
                 if (id != null && evalVersion != null) {
-                    refs.add(com.abchina.llmalf.agentgate.domain.model.evaluator.EvaluatorRef
+                    refs.add(EvaluatorRef
                             .of(id, evalVersion, null));
                 }
                 index++;
@@ -288,7 +288,7 @@ public class RunController {
                     rawRefs, null);
         }
         errors.throwIfAny();
-        com.abchina.llmalf.agentgate.domain.model.run.EvaluationRun[] pair;
+        EvaluationRun[] pair;
         try {
             pair = runLaunchService.submitAbRuns(baselineVersion, candidateVersion,
                     datasetId, datasetVersion, refs);
@@ -317,7 +317,7 @@ public class RunController {
      * @param request 稳定性请求
      * @return Run 列表
      */
-    @org.springframework.web.bind.annotation.PostMapping("/api/stability-experiments")
+    @PostMapping("/api/stability-experiments")
     public ResponseEntity<ResponseBase<Object>> launchStability(
             @RequestBody Map<String, Object> request) {
         PydanticErrors errors = new PydanticErrors();
@@ -405,7 +405,7 @@ public class RunController {
      * @param runId Run id
      * @return 取消后进度
      */
-    @org.springframework.web.bind.annotation.PostMapping("/api/runs/{runId}/cancel")
+    @PostMapping("/api/runs/{runId}/cancel")
     public ResponseBase<Map<String, Object>> cancelRun(@PathVariable("runId") String runId) {
         runLaunchService.cancelRun(runId);
         return ResponseBase.success(runReaderService.getRunProgress(runId));
@@ -417,41 +417,11 @@ public class RunController {
      * @param runId 源 Run id
      * @return 新 Run 进度
      */
-    @org.springframework.web.bind.annotation.PostMapping("/api/runs/{runId}/rerun")
+    @PostMapping("/api/runs/{runId}/rerun")
     public ResponseEntity<ResponseBase<Map<String, Object>>> rerunRun(
             @PathVariable("runId") String runId) {
-        Map<String, Object> result = ApiErrors.notFound(() -> {
-            com.abchina.llmalf.agentgate.domain.model.run.EvaluationRun source =
-                    runLogicProxy.getRun(runId, UserContextHolder.current().userTeamId());
-            if (source == null) {
-                throw new AgentException(404, "unknown EvaluationRun: " + runId);
-            }
-            if (source.status() == com.abchina.llmalf.agentgate.domain.model.run.RunStatus.SCHEDULED
-                    || source.status() == com.abchina.llmalf.agentgate.domain.model.run.RunStatus.PENDING
-                    || source.status() == com.abchina.llmalf.agentgate.domain.model.run.RunStatus.WAITING
-                    || source.status() == com.abchina.llmalf.agentgate.domain.model.run.RunStatus.RUNNING) {
-                throw new AgentException(409, "cannot rerun "
-                        + source.status().wireValue() + " EvaluationRun");
-            }
-            String newRunId = java.util.UUID.randomUUID().toString();
-            com.abchina.llmalf.agentgate.domain.model.run.EvaluationRun rerun =
-                    com.abchina.llmalf.agentgate.domain.model.run.EvaluationRun.of(newRunId,
-                            source.manifest(),
-                            com.abchina.llmalf.agentgate.domain.model.run.RunLifecycle.of(
-                                    com.abchina.llmalf.agentgate.domain.model.run.RunStatus.PENDING,
-                                    com.abchina.llmalf.agentgate.domain.DomainValidations.utcNow(),
-                                    null, null, null, null),
-                            source.userTeamId(), source.userId(), source.userName(),
-                            source.apiKey(), 0);
-            taskLogicProxy.saveTaskRuns(
-                    com.abchina.llmalf.agentgate.domain.model.evaluationtask.EvaluationTask.of(
-                            newRunId,
-                            com.abchina.llmalf.agentgate.domain.model.evaluationtask.EvaluationTaskKind.SINGLE,
-                            null, Collections.singletonList(newRunId), null, null, null),
-                    Collections.singletonList(rerun));
-            runLaunchService.dispatchRun(newRunId);
-            return runReaderService.getRunProgress(newRunId);
-        });
+        EvaluationRun rerun = runLaunchService.rerunRun(runId);
+        Map<String, Object> result = runReaderService.getRunProgress(rerun.id());
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(ResponseBase.success(result));
     }
 
@@ -578,20 +548,20 @@ public class RunController {
         return value == null ? null : String.valueOf(value);
     }
 
-    private static java.time.OffsetDateTime timeOrNull(Object value) {
+    private static OffsetDateTime timeOrNull(Object value) {
         if (value == null) {
             return null;
         }
         String text = String.valueOf(value);
         try {
-            return java.time.OffsetDateTime.parse(text);
-        } catch (java.time.format.DateTimeParseException offsetError) {
+            return OffsetDateTime.parse(text);
+        } catch (DateTimeParseException offsetError) {
             try {
                 // date-only → UTC 午夜(pydantic datetime lax 语义)
-                return java.time.LocalDate.parse(text)
-                        .atStartOfDay(java.time.ZoneOffset.UTC)
+                return LocalDate.parse(text)
+                        .atStartOfDay(ZoneOffset.UTC)
                         .toOffsetDateTime();
-            } catch (java.time.format.DateTimeParseException dateError) {
+            } catch (DateTimeParseException dateError) {
                 throw new AgentException(422, "Input should be a valid datetime");
             }
         }

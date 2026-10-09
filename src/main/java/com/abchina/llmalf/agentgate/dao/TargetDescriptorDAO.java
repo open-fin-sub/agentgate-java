@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 /**
  * 目标描述符 DAO (MyBatis-Plus Mapper).
  *
@@ -19,7 +21,7 @@ public interface TargetDescriptorDAO extends BaseMapper<TargetDescriptorEntity> 
      * @param targetRefKey 参数
      * @return 实体列表
      */
-    java.util.List<TargetDescriptorEntity> selectByTargetRefKey(@Param("targetRefKey") byte[] targetRefKey);
+    List<TargetDescriptorEntity> selectByTargetRefKey(@Param("targetRefKey") byte[] targetRefKey);
 
     /**
      * 按主键锁定读.

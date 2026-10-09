@@ -3,6 +3,7 @@ package com.abchina.llmalf.agentgate.domain.model.cases;
 import com.abchina.llmalf.agentgate.domain.DomainValidations;
 import com.abchina.llmalf.agentgate.domain.FrozenJson;
 import com.abchina.llmalf.agentgate.domain.PayloadValues;
+import com.abchina.llmalf.agentgate.domain.model.expectation.Expectation;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -91,7 +92,7 @@ public final class Case {
         }
         Set<String> expectationIds = new HashSet<>();
         for (CaseTurn turn : frozenTurns) {
-            for (com.abchina.llmalf.agentgate.domain.model.expectation.Expectation expectation
+            for (Expectation expectation
                     : turn.expectations()) {
                 if (!expectationIds.add(expectation.id())) {
                     throw new IllegalArgumentException("Expectation ids must be unique within a Case");

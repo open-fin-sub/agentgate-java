@@ -11,7 +11,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Target 域存储编排.
@@ -108,8 +111,8 @@ public class TargetLogic {
 
     private static Object excludeFetchedAt(Object payloadTree) {
         @SuppressWarnings("unchecked")
-        java.util.Map<String, Object> payload = new java.util.LinkedHashMap<>(
-                (java.util.Map<String, Object>) payloadTree);
+        Map<String, Object> payload = new LinkedHashMap<>(
+                (Map<String, Object>) payloadTree);
         payload.remove("fetched_at");
         return payload;
     }
@@ -143,7 +146,7 @@ public class TargetLogic {
     private static void verifyIndexed(TargetDescriptorEntity rebuilt,
             TargetDescriptorEntity stored) {
         if (!equalsNullable(rebuilt.getContentSha256(), stored.getContentSha256())
-                || !java.util.Arrays.equals(rebuilt.getTargetRefKey(), stored.getTargetRefKey())
+                || !Arrays.equals(rebuilt.getTargetRefKey(), stored.getTargetRefKey())
                 || !equalsNullable(rebuilt.getSourceId(), stored.getSourceId())
                 || !equalsNullable(rebuilt.getTargetType(), stored.getTargetType())
                 || !equalsNullable(rebuilt.getExternalTargetId(), stored.getExternalTargetId())

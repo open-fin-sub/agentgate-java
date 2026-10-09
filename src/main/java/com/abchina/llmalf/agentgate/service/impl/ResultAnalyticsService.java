@@ -3,6 +3,8 @@ package com.abchina.llmalf.agentgate.service.impl;
 import com.abchina.llmalf.agentgate.common.AgentException;
 import com.abchina.llmalf.agentgate.common.UserContextHolder;
 import com.abchina.llmalf.agentgate.domain.model.cases.Case;
+import com.abchina.llmalf.agentgate.domain.model.cases.CaseTurn;
+import com.abchina.llmalf.agentgate.domain.model.expectation.Expectation;
 import com.abchina.llmalf.agentgate.domain.model.expectation.SkillRouteExpectation;
 import com.abchina.llmalf.agentgate.domain.model.expectation.ToolCallExpectation;
 import com.abchina.llmalf.agentgate.domain.model.result.CheckResult;
@@ -14,7 +16,9 @@ import com.abchina.llmalf.agentgate.logic.ResultLogic;
 import com.abchina.llmalf.agentgate.logic.RunLogic;
 import org.springframework.stereotype.Service;
 
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -95,9 +99,9 @@ public class ResultAnalyticsService {
         Groups toolGroups = new Groups();
         Map<String, Object> expectationIndex = new HashMap<>();
         for (Case caseItem : run.manifest().executionCases()) {
-            for (com.abchina.llmalf.agentgate.domain.model.cases.CaseTurn turn
+            for (CaseTurn turn
                     : caseItem.turns()) {
-                for (com.abchina.llmalf.agentgate.domain.model.expectation.Expectation expectation
+                for (Expectation expectation
                         : turn.expectations()) {
                     if (expectation instanceof SkillRouteExpectation
                             || expectation instanceof ToolCallExpectation) {
@@ -173,7 +177,7 @@ public class ResultAnalyticsService {
         }
         if (!unknown.isEmpty()) {
             List<String> sorted = new ArrayList<>(unknown);
-            java.util.Collections.sort(sorted);
+            Collections.sort(sorted);
             throw new AgentException(409,
                     "EvaluationResults reference unknown Cases: " + String.join(", ", sorted));
         }
@@ -282,10 +286,10 @@ public class ResultAnalyticsService {
 
         List<Map.Entry<String, List<Item>>> sorted() {
             List<String> keys = new ArrayList<>(items.keySet());
-            java.util.Collections.sort(keys);
+            Collections.sort(keys);
             List<Map.Entry<String, List<Item>>> result = new ArrayList<>(keys.size());
             for (String key : keys) {
-                result.add(new java.util.AbstractMap.SimpleEntry<>(key, items.get(key)));
+                result.add(new SimpleEntry<>(key, items.get(key)));
             }
             return result;
         }

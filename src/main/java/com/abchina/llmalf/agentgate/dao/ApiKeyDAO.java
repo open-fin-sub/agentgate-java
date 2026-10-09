@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 /**
  * API Key DAO (MyBatis-Plus Mapper).
  *
@@ -18,7 +20,7 @@ public interface ApiKeyDAO extends BaseMapper<ApiKeyEntity> {
      *
      * @return 实体列表
      */
-    java.util.List<ApiKeyEntity> selectAll();
+    List<ApiKeyEntity> selectAll();
 
 
     /**

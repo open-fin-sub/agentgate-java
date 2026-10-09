@@ -3,6 +3,7 @@ package com.abchina.llmalf.agentgate.config;
 import com.abchina.llmalf.agentgate.service.impl.RunReaderService;
 import com.abchina.llmalf.agentgate.service.impl.RunSchedulingService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -23,9 +24,9 @@ public class RunScheduler {
 
     public RunScheduler(RunReaderService runReaderService,
             RunSchedulingService runSchedulingService,
-            @org.springframework.beans.factory.annotation.Value(
+            @Value(
                     "${agentgate.scheduling.stale-grace-seconds:30}") long staleGraceSeconds,
-            @org.springframework.beans.factory.annotation.Value(
+            @Value(
                     "${agentgate.scheduling.scan-batch-size:100}") int scanBatchSize) {
         this.runReaderService = runReaderService;
         this.runSchedulingService = runSchedulingService;
@@ -38,16 +39,23 @@ public class RunScheduler {
      */
     @Scheduled(fixedDelayString = "${agentgate.scheduling.interval-seconds:10}000")
     public void scan() {
+        long startedAt = System.nanoTime();
         try {
-            log.info("start Scheduler scan ...");
+            log.info("Scheduler scan started: stale_grace_seconds={} batch_size={}",
+                    staleGraceSeconds, scanBatchSize);
             runReaderService.failStaleRuns(staleGraceSeconds);
             int due = runSchedulingService.dispatchDueRuns(scanBatchSize).size();
             int waiting = runSchedulingService.dispatchWaitingRuns(scanBatchSize).size();
-            if (due > 0 || waiting > 0) {
-                log.info("Scheduler scan: dispatched due={} waiting={}", due, waiting);
-            }
+            log.info("Scheduler scan completed: dispatched_due={} dispatched_waiting={} "
+                            + "elapsed_ms={}",
+                    due, waiting, elapsedMillis(startedAt));
         } catch (RuntimeException e) {
-            log.error("Scheduler scan failed: {}", e.getClass().getSimpleName(), e);
+            log.error("Scheduler scan failed: elapsed_ms={} error_type={}",
+                    elapsedMillis(startedAt), e.getClass().getSimpleName(), e);
         }
+    }
+
+    private static long elapsedMillis(long startedAt) {
+        return (System.nanoTime() - startedAt) / 1_000_000L;
     }
 }

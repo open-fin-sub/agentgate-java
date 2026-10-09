@@ -1,6 +1,10 @@
 package com.abchina.llmalf.agentgate.service.format;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -17,7 +21,7 @@ public final class DatasetJsonFormat {
     /** 交换格式版本 */
     public static final int FORMAT_VERSION = 1;
 
-    private static final Set<String> ENVELOPE_KEYS = new HashSet<>(java.util.Arrays.asList(
+    private static final Set<String> ENVELOPE_KEYS = new HashSet<>(Arrays.asList(
             "format", "format_version", "dataset", "version"));
 
     private DatasetJsonFormat() {
@@ -68,8 +72,8 @@ public final class DatasetJsonFormat {
     }
 
     private static String joinSorted(Set<String> values) {
-        java.util.List<String> sorted = new java.util.ArrayList<>(values);
-        java.util.Collections.sort(sorted);
+        List<String> sorted = new ArrayList<>(values);
+        Collections.sort(sorted);
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < sorted.size(); i++) {
             if (i > 0) {

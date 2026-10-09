@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -126,7 +127,7 @@ public class ApiKeyLogic {
     }
 
     private static void verifyIndexed(ApiKeyMetadata metadata, ApiKeyEntity entity) {
-        if (!java.util.Arrays.equals(IdentityDigest.of(metadata.id()), entity.getIdKey())
+        if (!Arrays.equals(IdentityDigest.of(metadata.id()), entity.getIdKey())
                 || !metadata.id().equals(entity.getId())
                 || !metadata.scope().wireValue().equals(entity.getScope())
                 || !metadata.providerId().equals(entity.getProviderId())

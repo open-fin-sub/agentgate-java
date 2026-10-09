@@ -3,16 +3,22 @@ package com.abchina.llmalf.agentgate.controller;
 import com.abchina.llmalf.agentgate.common.AgentException;
 import com.abchina.llmalf.agentgate.common.ApiErrors;
 import com.abchina.llmalf.agentgate.common.ResponseBase;
+import com.abchina.llmalf.agentgate.common.SafeMessages;
 import com.abchina.llmalf.agentgate.domain.model.cases.Case;
 import com.abchina.llmalf.agentgate.domain.model.dataset.Dataset;
 import com.abchina.llmalf.agentgate.domain.model.dataset.DatasetVersion;
 import com.abchina.llmalf.agentgate.service.IDatasetService;
+import com.abchina.llmalf.agentgate.service.format.DatasetXlsxFormat;
+import com.abchina.llmalf.agentgate.service.format.XlsxFormatException;
+import com.abchina.llmalf.agentgate.service.format.XlsxIssue;
 import com.abchina.llmalf.agentgate.service.vo.CopyDatasetRequest;
 import com.abchina.llmalf.agentgate.service.vo.CreateDatasetRequest;
 import com.abchina.llmalf.agentgate.service.vo.CreateDraftRequest;
 import com.abchina.llmalf.agentgate.service.vo.ReorderCasesRequest;
 import com.abchina.llmalf.agentgate.service.vo.UpdateDatasetRequest;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,9 +28,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -92,7 +103,7 @@ public class DatasetController {
             List<DatasetVersion> versions = datasetService.listVersions(datasetId);
             Map<String, Object> payload = new LinkedHashMap<>();
             payload.put("dataset", dataset.toPayload());
-            List<Object> versionPayloads = new java.util.ArrayList<>();
+            List<Object> versionPayloads = new ArrayList<>();
             for (DatasetVersion version : versions) {
                 versionPayloads.add(version.toPayload());
             }
@@ -162,7 +173,7 @@ public class DatasetController {
     public ResponseBase<List<Object>> listDatasetVersions(
             @PathVariable("datasetId") String datasetId) {
         List<Object> result = ApiErrors.notFound(() -> {
-            List<Object> payloads = new java.util.ArrayList<>();
+            List<Object> payloads = new ArrayList<>();
             for (DatasetVersion version : datasetService.listVersions(datasetId)) {
                 payloads.add(version.toPayload());
             }
@@ -358,35 +369,35 @@ public class DatasetController {
      */
     @PostMapping("/import/xlsx")
     public ResponseEntity<ResponseBase<Map<String, Object>>> importDatasetXlsx(
-            @org.springframework.web.bind.annotation.RequestParam("file")
-            org.springframework.web.multipart.MultipartFile file,
-            @org.springframework.web.bind.annotation.RequestParam("name") String name,
-            @org.springframework.web.bind.annotation.RequestParam(value = "description",
+            @RequestParam("file")
+            MultipartFile file,
+            @RequestParam("name") String name,
+            @RequestParam(value = "description",
                     required = false, defaultValue = "") String description) {
         if (file.getOriginalFilename() == null
                 || !file.getOriginalFilename().toLowerCase().endsWith(".xlsx")) {
-            throw xlsxError(new com.abchina.llmalf.agentgate.service.format.XlsxIssue(
-                    com.abchina.llmalf.agentgate.service.format.DatasetXlsxFormat.SHEET_NAME,
+            throw xlsxError(new XlsxIssue(
+                    DatasetXlsxFormat.SHEET_NAME,
                     null, null, "file must have a .xlsx filename"));
         }
-        if (file.getSize() > com.abchina.llmalf.agentgate.service.format.DatasetXlsxFormat
+        if (file.getSize() > DatasetXlsxFormat
                 .MAX_INPUT_BYTES) {
-            throw xlsxError(new com.abchina.llmalf.agentgate.service.format.XlsxIssue(
-                    com.abchina.llmalf.agentgate.service.format.DatasetXlsxFormat.SHEET_NAME,
+            throw xlsxError(new XlsxIssue(
+                    DatasetXlsxFormat.SHEET_NAME,
                     null, null, "file exceeds the 10 MiB limit"));
         }
         byte[] content;
         try {
             content = file.getBytes();
-        } catch (java.io.IOException e) {
-            throw xlsxError(new com.abchina.llmalf.agentgate.service.format.XlsxIssue(
-                    com.abchina.llmalf.agentgate.service.format.DatasetXlsxFormat.SHEET_NAME,
+        } catch (IOException e) {
+            throw xlsxError(new XlsxIssue(
+                    DatasetXlsxFormat.SHEET_NAME,
                     null, null, "file is not a valid XLSX archive"));
         }
         Map<String, Object> result;
         try {
             result = datasetService.importXlsx(content, name, description);
-        } catch (com.abchina.llmalf.agentgate.service.format.XlsxFormatException e) {
+        } catch (XlsxFormatException e) {
             throw xlsxError(e);
         } catch (IllegalArgumentException e) {
             throw new AgentException(422, e.getMessage());
@@ -408,7 +419,7 @@ public class DatasetController {
             IDatasetService.ExportedVersion exported =
                     datasetService.exportVersion(datasetId, version, "json");
             try {
-                return new com.fasterxml.jackson.databind.ObjectMapper().readTree(
+                return new ObjectMapper().readTree(
                         exported.content());
             } catch (Exception e) {
                 throw new IllegalStateException("exported JSON is invalid", e);
@@ -430,7 +441,7 @@ public class DatasetController {
         IDatasetService.ExportedVersion exported;
         try {
             exported = datasetService.exportVersion(datasetId, version, "xlsx");
-        } catch (com.abchina.llmalf.agentgate.service.format.XlsxFormatException e) {
+        } catch (XlsxFormatException e) {
             throw xlsxError(e);
         } catch (IllegalArgumentException e) {
             throw new AgentException(404, e.getMessage());
@@ -439,25 +450,25 @@ public class DatasetController {
                 .header("Content-Disposition", "attachment; filename=\"" + exported.filename() + "\"")
                 .header("ETag", "\"" + exported.contentSha256() + "\"")
                 .header("Cache-Control", "private, immutable")
-                .contentType(org.springframework.http.MediaType.parseMediaType(exported.mediaType()))
+                .contentType(MediaType.parseMediaType(exported.mediaType()))
                 .body(exported.content());
     }
 
     private static AgentException xlsxError(
-            com.abchina.llmalf.agentgate.service.format.XlsxIssue... issues) {
-        return xlsxError(new com.abchina.llmalf.agentgate.service.format.XlsxFormatException(
-                java.util.Arrays.asList(issues)));
+            XlsxIssue... issues) {
+        return xlsxError(new XlsxFormatException(
+                Arrays.asList(issues)));
     }
 
     private static AgentException xlsxError(
-            com.abchina.llmalf.agentgate.service.format.XlsxFormatException error) {
-        List<Map<String, Object>> issueList = new java.util.ArrayList<>();
-        for (com.abchina.llmalf.agentgate.service.format.XlsxIssue issue : error.issues()) {
+            XlsxFormatException error) {
+        List<Map<String, Object>> issueList = new ArrayList<>();
+        for (XlsxIssue issue : error.issues()) {
             Map<String, Object> item = new LinkedHashMap<>();
             item.put("sheet", issue.sheet());
             item.put("row", issue.row());
             item.put("column", issue.column());
-            item.put("message", com.abchina.llmalf.agentgate.common.SafeMessages.redact(
+            item.put("message", SafeMessages.redact(
                     issue.message()));
             issueList.add(item);
         }

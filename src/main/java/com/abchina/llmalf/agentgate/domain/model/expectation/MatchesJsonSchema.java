@@ -3,6 +3,7 @@ package com.abchina.llmalf.agentgate.domain.model.expectation;
 import com.abchina.llmalf.agentgate.domain.FrozenJson;
 import com.abchina.llmalf.agentgate.domain.PayloadValues;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -50,7 +51,7 @@ public final class MatchesJsonSchema implements Condition {
 
     @Override
     public Object toPayload() {
-        Map<String, Object> payload = new java.util.LinkedHashMap<>();
+        Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("kind", KIND);
         payload.put("json_schema", jsonSchema);
         return payload;

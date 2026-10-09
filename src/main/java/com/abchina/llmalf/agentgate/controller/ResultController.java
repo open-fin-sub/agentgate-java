@@ -4,10 +4,10 @@ import com.abchina.llmalf.agentgate.common.ApiErrors;
 import com.abchina.llmalf.agentgate.common.PydanticErrors;
 import com.abchina.llmalf.agentgate.common.ResponseBase;
 import com.abchina.llmalf.agentgate.domain.model.cases.Case;
+import com.abchina.llmalf.agentgate.domain.model.report.EvaluationReport;
 import com.abchina.llmalf.agentgate.service.impl.ComparisonService;
 import com.abchina.llmalf.agentgate.service.impl.ResultAnalyticsService;
 import com.abchina.llmalf.agentgate.service.impl.ResultService;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -159,9 +159,9 @@ public class ResultController {
             errors.missing("query", "candidate_run_id", null);
         }
         errors.throwIfAny();
-        com.abchina.llmalf.agentgate.domain.model.report.EvaluationReport baseline =
+        EvaluationReport baseline =
                 resultService.getReport(baselineRunId);
-        com.abchina.llmalf.agentgate.domain.model.report.EvaluationReport candidate =
+        EvaluationReport candidate =
                 resultService.getReport(candidateRunId);
         return ResponseBase.success(comparisonService.compare(baseline, candidate));
     }

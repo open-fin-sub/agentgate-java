@@ -1,5 +1,6 @@
 package com.abchina.llmalf.agentgate.service.impl;
 
+import com.abchina.llmalf.agentgate.domain.DomainValidations;
 import com.abchina.llmalf.agentgate.domain.model.run.EvaluationRun;
 import com.abchina.llmalf.agentgate.domain.model.run.RunStatus;
 import com.abchina.llmalf.agentgate.integration.BjsJobDispatcher;
@@ -8,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -45,8 +48,8 @@ public class RunSchedulingService {
      */
     public List<EvaluationRun> dispatchDueRuns(int limit) {
         List<EvaluationRun> dueRuns = runLogic.claimDueScheduledRuns(
-                com.abchina.llmalf.agentgate.domain.DomainValidations.utcNow(), limit);
-        java.util.List<EvaluationRun> dispatched = new java.util.ArrayList<>();
+                DomainValidations.utcNow(), limit);
+        List<EvaluationRun> dispatched = new ArrayList<>();
         for (EvaluationRun run : dueRuns) {
             int active = runLogic.countActiveRunsByApiKey(run.apiKey());
             if (active > maxConcurrentPerApiKey) {
@@ -60,7 +63,7 @@ public class RunSchedulingService {
             try {
                 dispatcher.submit(run.id());
             } catch (RuntimeException e) {
-                handleDispatchFailure(run, e, com.abchina.llmalf.agentgate.domain.DomainValidations.utcNow());
+                handleDispatchFailure(run, e, DomainValidations.utcNow());
                 continue;
             }
             log.info("Scheduled run dispatched: run_id={}", run.id());
@@ -78,7 +81,7 @@ public class RunSchedulingService {
     public List<EvaluationRun> dispatchWaitingRuns(int limit) {
         List<EvaluationRun> waitingRuns = runLogic.listRunsByStatus(RunStatus.WAITING,
                 limit, true, null);
-        java.util.List<EvaluationRun> dispatched = new java.util.ArrayList<>();
+        List<EvaluationRun> dispatched = new ArrayList<>();
         for (EvaluationRun run : waitingRuns) {
             int active = runLogic.countActiveRunsByApiKey(run.apiKey());
             if (active >= maxConcurrentPerApiKey) {
@@ -87,14 +90,14 @@ public class RunSchedulingService {
                 continue;
             }
             EvaluationRun claimed = runLogic.claimWaitingRun(run.id(),
-                    com.abchina.llmalf.agentgate.domain.DomainValidations.utcNow());
+                    DomainValidations.utcNow());
             if (claimed == null) {
                 continue;
             }
             try {
                 dispatcher.submit(claimed.id());
             } catch (RuntimeException e) {
-                handleDispatchFailure(claimed, e, com.abchina.llmalf.agentgate.domain.DomainValidations.utcNow());
+                handleDispatchFailure(claimed, e, DomainValidations.utcNow());
                 continue;
             }
             log.info("Waiting run dispatched: run_id={}", claimed.id());
@@ -105,7 +108,7 @@ public class RunSchedulingService {
 
     private EvaluationRun transitionToWaiting(EvaluationRun run, boolean incrementAttempts) {
         EvaluationRun waiting = run.transition(RunStatus.WAITING,
-                com.abchina.llmalf.agentgate.domain.DomainValidations.utcNow(), null);
+                DomainValidations.utcNow(), null);
         if (incrementAttempts) {
             waiting = waiting.withDispatchAttempts(run.dispatchAttempts() + 1);
         }
@@ -113,7 +116,7 @@ public class RunSchedulingService {
     }
 
     private void handleDispatchFailure(EvaluationRun run, RuntimeException exc,
-            java.time.OffsetDateTime occurredAt) {
+            OffsetDateTime occurredAt) {
         int attempts = run.dispatchAttempts() + 1;
         if (attempts < maxDispatchAttempts) {
             EvaluationRun waiting = transitionToWaiting(run, true);

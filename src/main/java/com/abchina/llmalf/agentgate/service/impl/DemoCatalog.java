@@ -6,6 +6,7 @@ import com.abchina.llmalf.agentgate.domain.model.target.TargetRef;
 import com.abchina.llmalf.agentgate.domain.model.target.TargetType;
 import com.abchina.llmalf.agentgate.domain.model.target.ToolDescriptor;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -23,8 +24,8 @@ import java.util.Map;
 public final class DemoCatalog {
 
     /** demo 目录固定时间戳(对齐 DEMO_CREATED_AT) */
-    public static final java.time.OffsetDateTime DEMO_CREATED_AT =
-            java.time.OffsetDateTime.parse("2026-01-01T00:00:00Z");
+    public static final OffsetDateTime DEMO_CREATED_AT =
+            OffsetDateTime.parse("2026-01-01T00:00:00Z");
 
     private DemoCatalog() {
     }

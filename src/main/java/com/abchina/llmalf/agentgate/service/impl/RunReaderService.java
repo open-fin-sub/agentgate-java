@@ -2,6 +2,8 @@ package com.abchina.llmalf.agentgate.service.impl;
 
 import com.abchina.llmalf.agentgate.common.UserContextHolder;
 import com.abchina.llmalf.agentgate.domain.DomainValidations;
+import com.abchina.llmalf.agentgate.domain.model.cases.Case;
+import com.abchina.llmalf.agentgate.domain.model.evaluator.EvaluatorSpec;
 import com.abchina.llmalf.agentgate.domain.model.result.EvaluationResult;
 import com.abchina.llmalf.agentgate.domain.model.run.EvaluationRun;
 import com.abchina.llmalf.agentgate.domain.model.run.RunStatus;
@@ -194,7 +196,7 @@ public class RunReaderService {
     private Map<String, Object> projectRun(EvaluationRun run, OffsetDateTime now,
             Integer queuePosition) {
         Set<String> expectedEvaluators = new HashSet<>();
-        for (com.abchina.llmalf.agentgate.domain.model.evaluator.EvaluatorSpec spec
+        for (EvaluatorSpec spec
                 : run.manifest().evaluatorSpecs()) {
             expectedEvaluators.add(spec.id());
         }
@@ -205,7 +207,7 @@ public class RunReaderService {
         }
         int completedCases = 0;
         int totalCases = run.manifest().executionCases().size();
-        for (com.abchina.llmalf.agentgate.domain.model.cases.Case caseItem
+        for (Case caseItem
                 : run.manifest().executionCases()) {
             Set<String> evaluators = resultsByCase.get(caseItem.id());
             if (evaluators != null && evaluators.containsAll(expectedEvaluators)) {

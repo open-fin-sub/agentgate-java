@@ -5,10 +5,12 @@ import com.abchina.llmalf.agentgate.domain.model.trace.Trace;
 import com.abchina.llmalf.agentgate.domain.model.trace.TraceSpan;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -46,7 +48,7 @@ public final class TraceRedactor {
             "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
             Pattern.CASE_INSENSITIVE);
 
-    private static final Set<String> CORRELATION_KEYS = new HashSet<>(java.util.Arrays
+    private static final Set<String> CORRELATION_KEYS = new HashSet<>(Arrays
             .asList("request_id", "session_id", "trace_id", "span_id"));
 
     private static final Set<String> DEFAULT_SENSITIVE_KEYS = buildDefaultKeys();
@@ -200,7 +202,7 @@ public final class TraceRedactor {
     }
 
     private static String normalizeKey(String key) {
-        String lowered = key.toLowerCase(java.util.Locale.ROOT);
+        String lowered = key.toLowerCase(Locale.ROOT);
         String replaced = KEY_SEPARATOR.matcher(lowered).replaceAll("_");
         while (replaced.startsWith("_")) {
             replaced = replaced.substring(1);

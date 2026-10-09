@@ -2,6 +2,7 @@ package com.abchina.llmalf.agentgate.service.impl;
 
 import com.abchina.llmalf.agentgate.common.AgentException;
 import com.abchina.llmalf.agentgate.common.UserContextHolder;
+import com.abchina.llmalf.agentgate.domain.DomainValidations;
 import com.abchina.llmalf.agentgate.domain.model.cases.Case;
 import com.abchina.llmalf.agentgate.domain.model.dataset.Dataset;
 import com.abchina.llmalf.agentgate.domain.model.dataset.DatasetVersion;
@@ -18,12 +19,14 @@ import com.abchina.llmalf.agentgate.logic.ResultLogic;
 import com.abchina.llmalf.agentgate.logic.RunLogic;
 import com.abchina.llmalf.agentgate.logic.TraceLogic;
 import com.abchina.llmalf.agentgate.logic.TraceRedactor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * 结果读取服务.
@@ -42,7 +45,7 @@ public class ResultService {
 
     public ResultService(RunLogic runLogic, ResultLogic resultLogic,
             TraceLogic traceLogic, DatasetLogic datasetLogic,
-            @org.springframework.beans.factory.annotation.Value(
+            @Value(
                     "${agentgate.overview.max-runs:50}") int maxRuns) {
         this.runLogic = runLogic;
         this.resultLogic = resultLogic;
@@ -226,12 +229,12 @@ public class ResultService {
                         "Dataset has no published version: " + datasetId);
             }
             draft = DatasetVersioning.createDraft(dataset, latest,
-                    java.util.UUID.randomUUID().toString(),
-                    com.abchina.llmalf.agentgate.domain.DomainValidations.utcNow());
+                    UUID.randomUUID().toString(),
+                    DomainValidations.utcNow());
             datasetLogic.saveDatasetVersion(draft);
         }
         DatasetVersion updated = DatasetVersioning.withCase(draft, editedCase,
-                com.abchina.llmalf.agentgate.domain.DomainValidations.utcNow());
+                DomainValidations.utcNow());
         datasetLogic.saveDatasetVersion(updated);
 
         Map<String, Object> result = new LinkedHashMap<>();

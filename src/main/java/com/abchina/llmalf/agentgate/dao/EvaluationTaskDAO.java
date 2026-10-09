@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 /**
  * 评测任务 DAO (MyBatis-Plus Mapper).
  *
@@ -18,7 +20,7 @@ public interface EvaluationTaskDAO extends BaseMapper<EvaluationTaskEntity> {
      *
      * @return 实体列表
      */
-    java.util.List<EvaluationTaskEntity> selectAll();
+    List<EvaluationTaskEntity> selectAll();
 
 
     /**

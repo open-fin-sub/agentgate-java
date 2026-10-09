@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 /**
  * 执行轨迹 DAO (MyBatis-Plus Mapper).
  *
@@ -19,7 +21,7 @@ public interface TraceDAO extends BaseMapper<TraceEntity> {
      * @param runKey 参数
      * @return 实体列表
      */
-    java.util.List<TraceEntity> selectByRunKey(@Param("runKey") byte[] runKey);
+    List<TraceEntity> selectByRunKey(@Param("runKey") byte[] runKey);
 
     /**
      * 按 Run+用例唯一键查询.

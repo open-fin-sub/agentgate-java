@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 /**
  * 评测器目录 DAO (MyBatis-Plus Mapper).
  *
@@ -19,7 +21,7 @@ public interface EvaluatorDAO extends BaseMapper<EvaluatorEntity> {
      * @param userTeamKey 参数
      * @return 实体列表
      */
-    java.util.List<EvaluatorEntity> selectByTeamKey(@Param("userTeamKey") byte[] userTeamKey);
+    List<EvaluatorEntity> selectByTeamKey(@Param("userTeamKey") byte[] userTeamKey);
 
     /**
      * 按主键锁定读.

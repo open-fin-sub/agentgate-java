@@ -6,10 +6,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
@@ -79,17 +81,17 @@ public class GlobalExceptionHandler {
     }
 
     /** 方法不支持(对齐 FastAPI 405 "Method Not Allowed") */
-    @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<ResponseBase<Object>> handleMethodNotSupported(
-            org.springframework.web.HttpRequestMethodNotSupportedException e) {
+            HttpRequestMethodNotSupportedException e) {
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
                 .body(ResponseBase.<Object>fail("Method Not Allowed"));
     }
 
     /** 未映射路径(对齐 FastAPI 默认 404 {"detail":"Not Found"}) */
-    @ExceptionHandler(org.springframework.web.servlet.NoHandlerFoundException.class)
+    @ExceptionHandler(NoHandlerFoundException.class)
     public ResponseEntity<ResponseBase<Object>> handleNoHandler(
-            org.springframework.web.servlet.NoHandlerFoundException e) {
+            NoHandlerFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ResponseBase.<Object>fail("Not Found"));
     }

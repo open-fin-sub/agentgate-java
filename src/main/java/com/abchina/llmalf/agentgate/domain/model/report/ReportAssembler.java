@@ -1,10 +1,12 @@
 package com.abchina.llmalf.agentgate.domain.model.report;
 
+import com.abchina.llmalf.agentgate.domain.model.cases.Case;
 import com.abchina.llmalf.agentgate.domain.model.gate.ReleaseGateDecision;
 import com.abchina.llmalf.agentgate.domain.model.metric.MetricSummary;
 import com.abchina.llmalf.agentgate.domain.model.result.EvaluationResult;
 import com.abchina.llmalf.agentgate.domain.model.run.EvaluationRun;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -30,8 +32,8 @@ public final class ReportAssembler {
                 run.manifest().primaryEvaluatorIds(),
                 run.manifest().metricPlan().id(),
                 run.manifest().metricPlan().version());
-        List<String> expectedCaseIds = new java.util.ArrayList<>();
-        for (com.abchina.llmalf.agentgate.domain.model.cases.Case caseItem
+        List<String> expectedCaseIds = new ArrayList<>();
+        for (Case caseItem
                 : run.manifest().executionCases()) {
             expectedCaseIds.add(caseItem.id());
         }

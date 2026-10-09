@@ -1,7 +1,13 @@
 package com.abchina.llmalf.agentgate.service.format;
 
+import com.abchina.llmalf.agentgate.domain.CanonicalJson;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
@@ -13,13 +19,18 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Deque;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
-import java.util.TreeMap;
+import java.util.TreeSet;
 
 /**
  * 单表 XLSX 用例交换格式.
@@ -39,7 +50,7 @@ public final class DatasetXlsxFormat {
             "turn_notes",
     };
     /** 必填表头 */
-    public static final Set<String> REQUIRED_HEADERS = new HashSet<>(java.util.Arrays.asList(
+    public static final Set<String> REQUIRED_HEADERS = new HashSet<>(Arrays.asList(
             "case_id", "case_name", "input_json"));
     /** 输入大小上限(10 MiB) */
     public static final int MAX_INPUT_BYTES = 10 * 1024 * 1024;
@@ -73,13 +84,13 @@ public final class DatasetXlsxFormat {
         try {
             workbook = new XSSFWorkbook(new ByteArrayInputStream(source));
         } catch (RuntimeException | IOException e) {
-            throw new XlsxFormatException(java.util.Collections.singletonList(
+            throw new XlsxFormatException(Collections.singletonList(
                     new XlsxIssue(SHEET_NAME, null, null, "workbook cannot be opened")));
         }
         try {
             int sheetIndex = workbook.getSheetIndex(SHEET_NAME);
             if (sheetIndex < 0) {
-                throw new XlsxFormatException(java.util.Collections.singletonList(
+                throw new XlsxFormatException(Collections.singletonList(
                         new XlsxIssue(SHEET_NAME, null, null, "required worksheet is missing")));
             }
             Sheet sheet = workbook.getSheetAt(sheetIndex);
@@ -87,7 +98,7 @@ public final class DatasetXlsxFormat {
         } catch (XlsxFormatException e) {
             throw e;
         } catch (RuntimeException e) {
-            throw new XlsxFormatException(java.util.Collections.singletonList(
+            throw new XlsxFormatException(Collections.singletonList(
                     new XlsxIssue(SHEET_NAME, null, null, "workbook content is invalid")));
         } finally {
             try {
@@ -113,18 +124,18 @@ public final class DatasetXlsxFormat {
         try {
             SXSSFSheet sheet = workbook.createSheet(SHEET_NAME);
             sheet.createFreezePane(0, 1);
-            writeRow(sheet, java.util.Arrays.asList(HEADERS));
+            writeRow(sheet, Arrays.asList(HEADERS));
             for (Map<String, Object> caseItem : cases) {
                 List<?> turns = (List<?>) caseItem.get("turns");
                 if (turns == null || turns.isEmpty()) {
-                    throw new XlsxFormatException(java.util.Collections.singletonList(
+                    throw new XlsxFormatException(Collections.singletonList(
                             new XlsxIssue(SHEET_NAME, null, null,
                                     "cannot export workbook: XLSX export Case requires at least one Turn")));
                 }
                 int order = 1;
                 for (Object turnObject : turns) {
                     if (!(turnObject instanceof Map)) {
-                        throw new XlsxFormatException(java.util.Collections.singletonList(
+                        throw new XlsxFormatException(Collections.singletonList(
                                 new XlsxIssue(SHEET_NAME, null, null,
                                         "cannot export workbook: XLSX export Turn must be an object")));
                     }
@@ -153,7 +164,7 @@ public final class DatasetXlsxFormat {
         } catch (XlsxFormatException e) {
             throw e;
         } catch (RuntimeException | IOException e) {
-            throw new XlsxFormatException(java.util.Collections.singletonList(
+            throw new XlsxFormatException(Collections.singletonList(
                     new XlsxIssue(SHEET_NAME, null, null, "cannot export workbook: " + e)));
         } finally {
             try {
@@ -185,11 +196,11 @@ public final class DatasetXlsxFormat {
             issue(issues, 1, null, "headers must not contain duplicates");
         }
         for (String name : names) {
-            if (!java.util.Arrays.asList(HEADERS).contains(name)) {
+            if (!Arrays.asList(HEADERS).contains(name)) {
                 issue(issues, 1, name, "unexpected header");
             }
         }
-        java.util.Set<String> missingRequired = new java.util.TreeSet<>(REQUIRED_HEADERS);
+        Set<String> missingRequired = new TreeSet<>(REQUIRED_HEADERS);
         missingRequired.removeAll(nameSet);
         for (String required : missingRequired) {
             issue(issues, 1, required, "required header is missing");
@@ -284,7 +295,7 @@ public final class DatasetXlsxFormat {
                 for (RowData row : rows) {
                     sorted.add(row.turnOrder);
                 }
-                java.util.Collections.sort(sorted);
+                Collections.sort(sorted);
                 boolean contiguous = true;
                 for (int i = 0; i < sorted.size(); i++) {
                     if (sorted.get(i) != i + 1) {
@@ -333,7 +344,7 @@ public final class DatasetXlsxFormat {
 
     private static void conflictCheck(List<XlsxIssue> issues, int rowNumber, String column,
             Object value, Object firstValue, int firstRowNumber, String caseId) {
-        if (!java.util.Objects.equals(value, firstValue)) {
+        if (!Objects.equals(value, firstValue)) {
             issue(issues, rowNumber, column,
                     "conflicts with row " + firstRowNumber + " for Case " + caseId);
         }
@@ -426,22 +437,22 @@ public final class DatasetXlsxFormat {
 
     private static boolean hasDuplicateKeys(String text) {
         try {
-            com.fasterxml.jackson.core.JsonFactory factory = MAPPER.getFactory();
-            try (com.fasterxml.jackson.core.JsonParser parser = factory.createParser(text)) {
-                java.util.Deque<Set<String>> stack = new java.util.ArrayDeque<>();
+            JsonFactory factory = MAPPER.getFactory();
+            try (JsonParser parser = factory.createParser(text)) {
+                Deque<Set<String>> stack = new ArrayDeque<>();
                 while (true) {
-                    com.fasterxml.jackson.core.JsonToken token = parser.nextToken();
+                    JsonToken token = parser.nextToken();
                     if (token == null) {
                         return false;
                     }
-                    if (token == com.fasterxml.jackson.core.JsonToken.START_OBJECT) {
+                    if (token == JsonToken.START_OBJECT) {
                         stack.push(new HashSet<String>());
-                    } else if (token == com.fasterxml.jackson.core.JsonToken.FIELD_NAME) {
+                    } else if (token == JsonToken.FIELD_NAME) {
                         Set<String> seen = stack.peek();
                         if (seen != null && !seen.add(parser.getCurrentName())) {
                             return true;
                         }
-                    } else if (token == com.fasterxml.jackson.core.JsonToken.END_OBJECT) {
+                    } else if (token == JsonToken.END_OBJECT) {
                         if (!stack.isEmpty()) {
                             stack.pop();
                         }
@@ -479,16 +490,16 @@ public final class DatasetXlsxFormat {
     private static void validateArchive(byte[] source) {
         List<XlsxIssue> issues = new ArrayList<>();
         if (source.length > MAX_INPUT_BYTES) {
-            throw new XlsxFormatException(java.util.Collections.singletonList(
+            throw new XlsxFormatException(Collections.singletonList(
                     new XlsxIssue(SHEET_NAME, null, null, "file exceeds the 10 MiB limit")));
         }
         Set<String> names = new HashSet<>();
         long totalSize = 0;
         int entryCount = 0;
-        try (org.apache.commons.compress.archivers.zip.ZipArchiveInputStream archive =
-                new org.apache.commons.compress.archivers.zip.ZipArchiveInputStream(
+        try (ZipArchiveInputStream archive =
+                new ZipArchiveInputStream(
                         new ByteArrayInputStream(source))) {
-            org.apache.commons.compress.archivers.zip.ZipArchiveEntry entry;
+            ZipArchiveEntry entry;
             while ((entry = archive.getNextZipEntry()) != null) {
                 entryCount++;
                 names.add(entry.getName());
@@ -506,11 +517,11 @@ public final class DatasetXlsxFormat {
                 }
             }
         } catch (Exception e) {
-            throw new XlsxFormatException(java.util.Collections.singletonList(
+            throw new XlsxFormatException(Collections.singletonList(
                     new XlsxIssue(SHEET_NAME, null, null, "file is not a valid XLSX archive")));
         }
         if (entryCount == 0) {
-            throw new XlsxFormatException(java.util.Collections.singletonList(
+            throw new XlsxFormatException(Collections.singletonList(
                     new XlsxIssue(SHEET_NAME, null, null, "file is not a valid XLSX archive")));
         }
         if (!names.contains("[Content_Types].xml")) {
@@ -545,7 +556,7 @@ public final class DatasetXlsxFormat {
     }
 
     private static void writeRow(SXSSFSheet sheet, List<?> values) {
-        org.apache.poi.ss.usermodel.Row row = sheet.createRow(sheet.getLastRowNum() + 1);
+        Row row = sheet.createRow(sheet.getLastRowNum() + 1);
         for (int i = 0; i < values.size(); i++) {
             Cell cell = row.createCell(i);
             Object value = values.get(i);
@@ -562,7 +573,7 @@ public final class DatasetXlsxFormat {
     }
 
     private static String jsonText(Object value) {
-        return com.abchina.llmalf.agentgate.domain.CanonicalJson.serialize(value);
+        return CanonicalJson.serialize(value);
     }
 
     private static Object rawValue(Cell cell) {

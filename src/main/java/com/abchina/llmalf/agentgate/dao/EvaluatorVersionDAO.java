@@ -4,6 +4,8 @@ import com.abchina.llmalf.agentgate.dao.entity.EvaluatorVersionEntity;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 /**
  * 评测器发布版本 DAO (复合主键,全 XML,不继承 BaseMapper).
  *
@@ -26,7 +28,7 @@ public interface EvaluatorVersionDAO {
      * @param evaluatorKey 参数
      * @return 实体列表
      */
-    java.util.List<EvaluatorVersionEntity> selectByEvaluatorKey(@Param("evaluatorKey") byte[] evaluatorKey);
+    List<EvaluatorVersionEntity> selectByEvaluatorKey(@Param("evaluatorKey") byte[] evaluatorKey);
 
     /**
      * 按复合主键查询.

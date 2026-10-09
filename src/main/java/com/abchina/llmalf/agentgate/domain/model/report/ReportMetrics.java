@@ -1,12 +1,10 @@
 package com.abchina.llmalf.agentgate.domain.model.report;
 
-import com.abchina.llmalf.agentgate.domain.model.evaluator.EvaluatorKind;
 import com.abchina.llmalf.agentgate.domain.model.metric.MetricSummary;
 import com.abchina.llmalf.agentgate.domain.model.result.EvaluationResult;
 import com.abchina.llmalf.agentgate.domain.model.result.Outcome;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;

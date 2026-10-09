@@ -4,6 +4,8 @@ import com.abchina.llmalf.agentgate.dao.entity.EvaluationTaskRunEntity;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 /**
  * 评测任务-Run 关联 DAO (复合主键,全 XML,不继承 BaseMapper).
  *
@@ -34,7 +36,7 @@ public interface EvaluationTaskRunDAO {
      * @param taskKey 参数
      * @return 实体列表
      */
-    java.util.List<EvaluationTaskRunEntity> selectByTaskKey(@Param("taskKey") byte[] taskKey);
+    List<EvaluationTaskRunEntity> selectByTaskKey(@Param("taskKey") byte[] taskKey);
 
     /**
      * 按任务摘要删除.

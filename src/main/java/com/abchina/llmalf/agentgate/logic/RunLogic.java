@@ -11,11 +11,10 @@ import com.abchina.llmalf.agentgate.domain.ContentSha256;
 import com.abchina.llmalf.agentgate.domain.DomainValidations;
 import com.abchina.llmalf.agentgate.domain.IdentityDigest;
 import com.abchina.llmalf.agentgate.domain.model.cases.Case;
+import com.abchina.llmalf.agentgate.domain.model.evaluator.EvaluatorSpec;
 import com.abchina.llmalf.agentgate.domain.model.run.EvaluationRun;
-import com.abchina.llmalf.agentgate.domain.model.run.RunLifecycle;
 import com.abchina.llmalf.agentgate.domain.model.run.RunManifest;
 import com.abchina.llmalf.agentgate.domain.model.run.RunStatus;
-import com.abchina.llmalf.agentgate.domain.model.run.RunTransitions;
 import com.abchina.llmalf.agentgate.domain.model.target.SkillDescriptor;
 import com.abchina.llmalf.agentgate.domain.model.target.TargetDescriptor;
 import org.springframework.dao.DuplicateKeyException;
@@ -414,7 +413,7 @@ public class RunLogic {
             }
         }
         for (int i = 0; i < manifest.evaluatorSpecs().size(); i++) {
-            com.abchina.llmalf.agentgate.domain.model.evaluator.EvaluatorSpec spec =
+            EvaluatorSpec spec =
                     manifest.evaluatorSpecs().get(i);
             refs.add(new String[] {"evaluator", "", spec.id(), spec.version(),
                     spec.contentSha256()});

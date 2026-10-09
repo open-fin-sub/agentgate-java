@@ -3,13 +3,15 @@ package com.abchina.llmalf.agentgate.service.impl;
 import com.abchina.llmalf.agentgate.common.AgentException;
 import com.abchina.llmalf.agentgate.common.UserContextHolder;
 import com.abchina.llmalf.agentgate.domain.model.cases.Case;
+import com.abchina.llmalf.agentgate.domain.model.cases.CaseTurn;
 import com.abchina.llmalf.agentgate.domain.model.dataset.DatasetVersion;
+import com.abchina.llmalf.agentgate.domain.model.evaluator.Evaluator;
 import com.abchina.llmalf.agentgate.domain.model.evaluator.EvaluatorKind;
 import com.abchina.llmalf.agentgate.domain.model.evaluator.EvaluatorRef;
 import com.abchina.llmalf.agentgate.domain.model.evaluator.EvaluatorSpec;
+import com.abchina.llmalf.agentgate.domain.model.expectation.Expectation;
 import com.abchina.llmalf.agentgate.logic.EvaluatorCatalog;
 import com.abchina.llmalf.agentgate.logic.EvaluatorLogic;
-import com.abchina.llmalf.agentgate.domain.model.evaluator.Evaluator;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -179,9 +181,9 @@ public class EvaluatorSelection {
             EvaluatorCatalog.validateHybridChildren(spec, childKinds);
         }
         for (Case caseItem : dataset.cases()) {
-            for (com.abchina.llmalf.agentgate.domain.model.cases.CaseTurn turn
+            for (CaseTurn turn
                     : caseItem.turns()) {
-                for (com.abchina.llmalf.agentgate.domain.model.expectation.Expectation expectation
+                for (Expectation expectation
                         : turn.expectations()) {
                     // JSON Schema 结构与策略 id 合法性校验归 Python 侧执行链;
                     // Java 端点面仅透传(demo 内置目录固化合法)

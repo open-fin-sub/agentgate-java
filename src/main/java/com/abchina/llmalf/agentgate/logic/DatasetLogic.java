@@ -14,8 +14,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * 数据集域存储编排.
@@ -99,7 +101,7 @@ public class DatasetLogic {
         if (!entity.getId().equals(datasetId)) {
             throw new IllegalArgumentException("database identity digest collision");
         }
-        if (!java.util.Arrays.equals(entity.getUserTeamKey(), IdentityDigest.of(userTeamId))) {
+        if (!Arrays.equals(entity.getUserTeamKey(), IdentityDigest.of(userTeamId))) {
             return null;
         }
         return toDataset(entity);
@@ -317,7 +319,7 @@ public class DatasetLogic {
     }
 
     private static DatasetVersion findOne(List<DatasetVersion> items,
-            java.util.function.Predicate<DatasetVersion> filter) {
+            Predicate<DatasetVersion> filter) {
         List<DatasetVersion> matched = new ArrayList<>();
         for (DatasetVersion item : items) {
             if (filter.test(item)) {
@@ -398,12 +400,12 @@ public class DatasetLogic {
     }
 
     private static void verifyIndexed(DatasetEntity rebuilt, DatasetEntity stored) {
-        if (!java.util.Arrays.equals(rebuilt.getIdKey(), stored.getIdKey())
+        if (!Arrays.equals(rebuilt.getIdKey(), stored.getIdKey())
                 || !equalsNullable(rebuilt.getId(), stored.getId())
                 || !equalsNullable(rebuilt.getName(), stored.getName())
                 || !equalsNullable(rebuilt.getArchived(), stored.getArchived())
                 || !equalsNullable(rebuilt.getUpdatedAt(), stored.getUpdatedAt())
-                || !java.util.Arrays.equals(rebuilt.getUserTeamKey(), stored.getUserTeamKey())
+                || !Arrays.equals(rebuilt.getUserTeamKey(), stored.getUserTeamKey())
                 || !equalsNullable(rebuilt.getUserTeamId(), stored.getUserTeamId())
                 || !equalsNullable(rebuilt.getUserId(), stored.getUserId())
                 || !equalsNullable(rebuilt.getUserName(), stored.getUserName())) {
@@ -412,16 +414,16 @@ public class DatasetLogic {
     }
 
     private static void verifyIndexed(DatasetVersionEntity rebuilt, DatasetVersionEntity stored) {
-        if (!java.util.Arrays.equals(rebuilt.getIdKey(), stored.getIdKey())
+        if (!Arrays.equals(rebuilt.getIdKey(), stored.getIdKey())
                 || !equalsNullable(rebuilt.getId(), stored.getId())
-                || !java.util.Arrays.equals(rebuilt.getDatasetKey(), stored.getDatasetKey())
+                || !Arrays.equals(rebuilt.getDatasetKey(), stored.getDatasetKey())
                 || !equalsNullable(rebuilt.getDatasetId(), stored.getDatasetId())
                 || !equalsNullable(rebuilt.getVersion(), stored.getVersion())
                 || !equalsNullable(rebuilt.getStatus(), stored.getStatus())
                 || !equalsNullable(rebuilt.getDraftSlot(), stored.getDraftSlot())
                 || !equalsNullable(rebuilt.getCreatedAt(), stored.getCreatedAt())
                 || !equalsNullable(rebuilt.getContentSha256(), stored.getContentSha256())
-                || !java.util.Arrays.equals(rebuilt.getUserTeamKey(), stored.getUserTeamKey())
+                || !Arrays.equals(rebuilt.getUserTeamKey(), stored.getUserTeamKey())
                 || !equalsNullable(rebuilt.getUserTeamId(), stored.getUserTeamId())
                 || !equalsNullable(rebuilt.getUserId(), stored.getUserId())
                 || !equalsNullable(rebuilt.getUserName(), stored.getUserName())) {

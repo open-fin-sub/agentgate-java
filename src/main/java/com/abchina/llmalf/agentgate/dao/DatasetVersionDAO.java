@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 /**
  * 数据集版本快照 DAO (MyBatis-Plus Mapper).
  *
@@ -20,7 +22,7 @@ public interface DatasetVersionDAO extends BaseMapper<DatasetVersionEntity> {
      * @param userTeamKey 参数
      * @return 实体列表
      */
-    java.util.List<DatasetVersionEntity> selectByDatasetKeyTeamKey(@Param("datasetKey") byte[] datasetKey, @Param("userTeamKey") byte[] userTeamKey);
+    List<DatasetVersionEntity> selectByDatasetKeyTeamKey(@Param("datasetKey") byte[] datasetKey, @Param("userTeamKey") byte[] userTeamKey);
 
     /**
      * 按主键锁定读.

@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -114,7 +115,7 @@ public class EvaluatorLogic {
         if (!entity.getId().equals(evaluatorId)) {
             throw new IllegalArgumentException("database identity digest collision");
         }
-        if (!java.util.Arrays.equals(entity.getUserTeamKey(), IdentityDigest.of(userTeamId))) {
+        if (!Arrays.equals(entity.getUserTeamKey(), IdentityDigest.of(userTeamId))) {
             return null;
         }
         return toEvaluator(entity);
@@ -157,7 +158,7 @@ public class EvaluatorLogic {
         EvaluatorEntity entity = evaluatorDAO.selectByIdForUpdate(
                 IdentityDigest.of(evaluatorId));
         if (entity == null
-                || !java.util.Arrays.equals(entity.getUserTeamKey(),
+                || !Arrays.equals(entity.getUserTeamKey(),
                         IdentityDigest.of(userTeamId))) {
             throw new IllegalArgumentException("unknown Evaluator");
         }
@@ -245,7 +246,7 @@ public class EvaluatorLogic {
                 IdentityDigest.of(expectedDraftId));
         if (entity == null || !entity.getId().equals(expectedDraftId)
                 || !entity.getEvaluatorId().equals(evaluatorId)
-                || !java.util.Arrays.equals(entity.getUserTeamKey(),
+                || !Arrays.equals(entity.getUserTeamKey(),
                         IdentityDigest.of(userTeamId))) {
             throw new IllegalArgumentException("expected Evaluator draft does not exist");
         }
@@ -265,7 +266,7 @@ public class EvaluatorLogic {
         for (EvaluatorVersionEntity entity : evaluatorVersionDAO.selectByEvaluatorKey(
                 IdentityDigest.of(evaluatorId))) {
             if (!entity.getEvaluatorId().equals(evaluatorId)
-                    || !java.util.Arrays.equals(entity.getUserTeamKey(),
+                    || !Arrays.equals(entity.getUserTeamKey(),
                             IdentityDigest.of(userTeamId))) {
                 throw new IllegalArgumentException("database identity digest collision");
             }
@@ -433,13 +434,13 @@ public class EvaluatorLogic {
     }
 
     private static void verifyIndexed(EvaluatorEntity rebuilt, EvaluatorEntity stored) {
-        if (!java.util.Arrays.equals(rebuilt.getIdKey(), stored.getIdKey())
+        if (!Arrays.equals(rebuilt.getIdKey(), stored.getIdKey())
                 || !equalsNullable(rebuilt.getId(), stored.getId())
                 || !equalsNullable(rebuilt.getSource(), stored.getSource())
                 || !equalsNullable(rebuilt.getEnabled(), stored.getEnabled())
                 || !equalsNullable(rebuilt.getCreatedAt(), stored.getCreatedAt())
                 || !equalsNullable(rebuilt.getUpdatedAt(), stored.getUpdatedAt())
-                || !java.util.Arrays.equals(rebuilt.getUserTeamKey(), stored.getUserTeamKey())
+                || !Arrays.equals(rebuilt.getUserTeamKey(), stored.getUserTeamKey())
                 || !equalsNullable(rebuilt.getUserTeamId(), stored.getUserTeamId())
                 || !equalsNullable(rebuilt.getUserId(), stored.getUserId())
                 || !equalsNullable(rebuilt.getUserName(), stored.getUserName())) {
@@ -448,13 +449,13 @@ public class EvaluatorLogic {
     }
 
     private static void verifyIndexed(EvaluatorDraftEntity rebuilt, EvaluatorDraftEntity stored) {
-        if (!java.util.Arrays.equals(rebuilt.getIdKey(), stored.getIdKey())
+        if (!Arrays.equals(rebuilt.getIdKey(), stored.getIdKey())
                 || !equalsNullable(rebuilt.getId(), stored.getId())
-                || !java.util.Arrays.equals(rebuilt.getEvaluatorKey(), stored.getEvaluatorKey())
+                || !Arrays.equals(rebuilt.getEvaluatorKey(), stored.getEvaluatorKey())
                 || !equalsNullable(rebuilt.getEvaluatorId(), stored.getEvaluatorId())
                 || !equalsNullable(rebuilt.getCreatedAt(), stored.getCreatedAt())
                 || !equalsNullable(rebuilt.getUpdatedAt(), stored.getUpdatedAt())
-                || !java.util.Arrays.equals(rebuilt.getUserTeamKey(), stored.getUserTeamKey())
+                || !Arrays.equals(rebuilt.getUserTeamKey(), stored.getUserTeamKey())
                 || !equalsNullable(rebuilt.getUserTeamId(), stored.getUserTeamId())
                 || !equalsNullable(rebuilt.getUserId(), stored.getUserId())
                 || !equalsNullable(rebuilt.getUserName(), stored.getUserName())) {
@@ -464,11 +465,11 @@ public class EvaluatorLogic {
 
     private static void verifyIndexed(EvaluatorVersionEntity rebuilt,
             EvaluatorVersionEntity stored) {
-        if (!java.util.Arrays.equals(rebuilt.getEvaluatorKey(), stored.getEvaluatorKey())
+        if (!Arrays.equals(rebuilt.getEvaluatorKey(), stored.getEvaluatorKey())
                 || !equalsNullable(rebuilt.getVersion(), stored.getVersion())
                 || !equalsNullable(rebuilt.getEvaluatorId(), stored.getEvaluatorId())
                 || !equalsNullable(rebuilt.getContentSha256(), stored.getContentSha256())
-                || !java.util.Arrays.equals(rebuilt.getUserTeamKey(), stored.getUserTeamKey())
+                || !Arrays.equals(rebuilt.getUserTeamKey(), stored.getUserTeamKey())
                 || !equalsNullable(rebuilt.getUserTeamId(), stored.getUserTeamId())
                 || !equalsNullable(rebuilt.getUserId(), stored.getUserId())
                 || !equalsNullable(rebuilt.getUserName(), stored.getUserName())) {

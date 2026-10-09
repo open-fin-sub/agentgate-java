@@ -1,19 +1,22 @@
 package com.abchina.llmalf.agentgate.integration;
 
-import com.abchina.llmalf.agentgate.domain.DomainValidations;
+import com.abchina.llmalf.agentgate.domain.CanonicalJson;
 import com.abchina.llmalf.agentgate.domain.model.trace.SpanStatus;
 import com.abchina.llmalf.agentgate.domain.model.trace.Trace;
 import com.abchina.llmalf.agentgate.domain.model.trace.TraceSpan;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -102,10 +105,10 @@ public final class OtlpIngest {
                                 "OTLP Span requires traceId and spanId");
                     }
                     String parentSpanId = stringOrNull(raw.get("parentSpanId"));
-                    TraceSpan span = TraceSpan.of(traceId.toLowerCase(java.util.Locale.ROOT),
-                            spanId.toLowerCase(java.util.Locale.ROOT),
+                    TraceSpan span = TraceSpan.of(traceId.toLowerCase(Locale.ROOT),
+                            spanId.toLowerCase(Locale.ROOT),
                             parentSpanId == null ? null
-                                    : parentSpanId.toLowerCase(java.util.Locale.ROOT),
+                                    : parentSpanId.toLowerCase(Locale.ROOT),
                             stringOrDefault(raw.get("name"), "otlp-span"),
                             operationType(spanAttributes),
                             0,
@@ -145,7 +148,7 @@ public final class OtlpIngest {
         String runId = requiredOwner(spans, "agentgate.run.id");
         String caseId = requiredOwner(spans, "agentgate.case.id");
         List<TraceSpan> ordered = new ArrayList<>(spans);
-        ordered.sort(java.util.Comparator
+        ordered.sort(Comparator
                 .comparing(TraceSpan::startedAt)
                 .thenComparing(TraceSpan::endedAt)
                 .thenComparing(TraceSpan::spanId));
@@ -265,7 +268,7 @@ public final class OtlpIngest {
             }
             Set<String> serialized = new HashSet<>();
             for (Object value : found.values()) {
-                serialized.add(com.abchina.llmalf.agentgate.domain.CanonicalJson
+                serialized.add(CanonicalJson
                         .serialize(value));
             }
             if (serialized.size() > 1) {
@@ -352,13 +355,13 @@ public final class OtlpIngest {
         long seconds = value.divide(new BigDecimal(1_000_000_000)).longValue();
         long nanos = value.remainder(new BigDecimal(1_000_000_000)).longValue();
         return OffsetDateTime.ofInstant(
-                java.time.Instant.ofEpochSecond(seconds, nanos),
+                Instant.ofEpochSecond(seconds, nanos),
                 ZoneOffset.UTC);
     }
 
     private static SpanStatus status(Map<String, Object> raw) {
         String code = stringOrDefault(raw.get("code"), "unset")
-                .toLowerCase(java.util.Locale.ROOT);
+                .toLowerCase(Locale.ROOT);
         if ("2".equals(code) || "status_code_error".equals(code) || "error".equals(code)) {
             return SpanStatus.ERROR;
         }
@@ -399,7 +402,7 @@ public final class OtlpIngest {
         }
         Object value;
         try {
-            value = new com.fasterxml.jackson.databind.ObjectMapper()
+            value = new ObjectMapper()
                     .readValue((String) raw, Object.class);
         } catch (Exception e) {
             throw new IllegalArgumentException(
